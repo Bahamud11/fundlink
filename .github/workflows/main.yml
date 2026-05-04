@@ -1,0 +1,136 @@
+name: Deploy to FTP
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_mysql, bcmath, soap, gd, exif, iconv, pcntl
+          tools: composer:v2
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --no-progress
+
+
+
+      - name: Remove unnecessary directories
+        run: |
+          # Remove all hidden directories except .git
+          find . -maxdepth 1 -type d -name ".*" ! -name "." ! -name ".git" -exec rm -rf {} + 2>/dev/null || true
+          # Remove large directories
+          rm -rf vendor node_modules tests storage/logs bootstrap/cache database/seeders
+          # Create empty dirs for storage and bootstrap
+          mkdir -p storage/logs bootstrap/cache
+          # Remove all markdown files, config files, and lock files
+          rm -f *.md .env.example phpunit.xml package-lock.json composer.lock vite.config.js tailwind.config.js
+          # Remove any node-related files
+          rm -f package.json npm-shrinkwrap.json yarn.lock
+          # Remove composer files
+          rm -f composer.json
+          echo "✓ Cleaned up directories"
+          echo "Size before deploy:"
+          du -sh . 2>/dev/null || echo "Size: unknown"
+
+      - name: Deploy to FTP (Attempt 1)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        continue-on-error: true
+        id: deploy_attempt_1
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_REMOTE_PATH }}
+          state-name: .ftp-deploy-sync-state.json
+          dangerous-clean-slate: false
+          exclude: |
+            .git
+            .github
+            .agents
+            .gemini
+            .claude
+            .vscode
+            node_modules
+            vendor
+            tests
+            storage/logs
+            bootstrap/cache
+            database/seeders
+
+
+      - name: Wait before retry
+        if: steps.deploy_attempt_1.outcome != 'success'
+        run: sleep 10
+
+      - name: Deploy to FTP (Attempt 2)
+        if: steps.deploy_attempt_1.outcome != 'success'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        continue-on-error: true
+        id: deploy_attempt_2
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_REMOTE_PATH }}
+          state-name: .ftp-deploy-sync-state.json
+          dangerous-clean-slate: false
+          exclude: |
+            .git
+            .github
+            .agents
+            .gemini
+            .claude
+            .vscode
+            node_modules
+            vendor
+            tests
+            storage/logs
+            bootstrap/cache
+            database/seeders
+
+
+      - name: Wait before final retry
+        if: steps.deploy_attempt_2.outcome != 'success'
+        run: sleep 15
+
+      - name: Deploy to FTP (Attempt 3)
+        if: steps.deploy_attempt_2.outcome != 'success'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_REMOTE_PATH }}
+          state-name: .ftp-deploy-sync-state.json
+          dangerous-clean-slate: false
+          exclude: |
+            .git
+            .github
+            .agents
+            .gemini
+            .claude
+            .vscode
+            node_modules
+            vendor
+            tests
+            storage/logs
+            bootstrap/cache
+            database/seeders
+
+
+      - name: Deployment completed
+        run: echo "✓ Successfully deployed to FTP server"
