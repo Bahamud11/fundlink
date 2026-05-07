@@ -77,7 +77,7 @@ class FundlinkApiController extends Controller
     public function storeTransaction(Request $request)
     {
         $user = $request->user();
-        
+
         $validator = Validator::make($request->all(), [
             'type' => 'required|in:pemasukan,pengeluaran',
             'amount' => 'required|numeric|min:1',
