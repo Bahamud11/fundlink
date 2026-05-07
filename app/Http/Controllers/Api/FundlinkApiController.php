@@ -112,4 +112,16 @@ class FundlinkApiController extends Controller
             'transaction' => $transaction
         ], 201);
     }
+
+    public function user(Request $request)
+    {
+        return response()->json($request->user()->load('unit'));
+    }
+
+    public function notifications(Request $request)
+    {
+        $user = $request->user();
+        $notifications = \App\Models\Notification::where('user_id', $user->id)->latest()->paginate(15);
+        return response()->json($notifications);
+    }
 }
