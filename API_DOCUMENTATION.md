@@ -18,8 +18,7 @@ Content-Type: application/json
 
 {
   "email": "user@example.com",
-  "password": "password",
-  "device_name": "iPhone 15 Pro"
+  "password": "password"
 }
 ```
 
@@ -160,14 +159,13 @@ class ApiService {
   final String baseUrl = 'https://yourdomain.com/api';
   String? _token;
 
-  Future<Map<String, dynamic>> login(String email, String password, String deviceName) async {
+  Future<Map<String, dynamic>> login(String email, String password) async {
     final response = await http.post(
       Uri.parse('$baseUrl/login'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'email': email,
         'password': password,
-        'device_name': deviceName,
       }),
     );
 
@@ -210,7 +208,7 @@ class ApiService {
     this.token = null;
   }
 
-  async login(email, password, deviceName) {
+  async login(email, password) {
     try {
       const response = await fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
@@ -220,7 +218,6 @@ class ApiService {
         body: JSON.stringify({
           email,
           password,
-          device_name: deviceName,
         }),
       });
 
@@ -272,7 +269,6 @@ class ApiService(private val context: Context) {
             val requestBody = JSONObject().apply {
                 put("email", email)
                 put("password", password)
-                put("device_name", deviceName)
             }
 
             val response = makeRequest("$baseUrl/login", "POST", requestBody.toString())
@@ -360,7 +356,7 @@ class ApiService(private val context: Context) {
 # Login
 curl -X POST https://yourdomain.com/api/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","password":"password","device_name":"test"}'
+  -d '{"email":"user@example.com","password":"password"}'
 
 # Get dashboard
 curl -X GET https://yourdomain.com/api/dashboard \

@@ -16,7 +16,6 @@ class FundlinkApiController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
-            'device_name' => 'required',
         ]);
 
         $user = User::where('email', $request->email)->first();
@@ -28,7 +27,7 @@ class FundlinkApiController extends Controller
         }
 
         return response()->json([
-            'token' => $user->createToken($request->device_name)->plainTextToken,
+            'token' => $user->createToken($request->device_name ?? 'api')->plainTextToken,
             'user' => $user->load('unit')
         ]);
     }

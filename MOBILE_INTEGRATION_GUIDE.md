@@ -125,7 +125,7 @@ class LoginViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  Future<bool> login(String email, String password, String deviceName) async {
+  Future<bool> login(String email, String password) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -134,7 +134,6 @@ class LoginViewModel extends ChangeNotifier {
       final response = await _apiClient.post('/login', {
         'email': email,
         'password': password,
-        'device_name': deviceName,
       });
 
       // Save token and user data
@@ -425,7 +424,6 @@ void main() {
       final result = await apiClient.post('/login', {
         'email': 'test@example.com',
         'password': 'password',
-        'device_name': 'test'
       });
 
       expect(result['token'], 'test_token');
