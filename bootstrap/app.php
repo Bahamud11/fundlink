@@ -16,9 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
 
-        $middleware->api(prepend: [
-            \Fruitcake\Cors\HandleCors::class,
-        ]);
+        // $middleware->api(prepend: [
+        //     \Fruitcake\Cors\HandleCors::class,
+        // ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
