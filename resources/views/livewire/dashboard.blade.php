@@ -109,7 +109,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-8">
+                    <div class="grid @if(auth()->user()->isAdmin()) grid-cols-2 @else grid-cols-1 @endif gap-8">
                         <div class="space-y-3">
                             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Waktu</label>
                             <div class="relative border-b border-gray-100 pb-2">
@@ -124,6 +124,7 @@
                                 </div>
                             </div>
                         </div>
+                        @if(auth()->user()->isAdmin())
                         <div class="space-y-3">
                             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cabang</label>
                             <div class="relative border-b border-gray-100 pb-2">
@@ -140,6 +141,7 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
                     </div>
                 </div>
 
@@ -192,8 +194,10 @@
                     <div>
                         <p class="text-lg font-black text-gray-900 tracking-tight">{{ $transaction->category }}</p>
                         <div class="flex items-center space-x-2 mt-1">
+                            @if(auth()->user()->isAdmin())
                             <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">{{ $transaction->unit->name }}</span>
                             <span class="text-gray-300">•</span>
+                            @endif
                             <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">{{ $transaction->transaction_date->format('d M Y') }}</span>
                         </div>
                     </div>

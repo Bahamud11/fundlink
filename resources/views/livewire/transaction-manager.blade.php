@@ -50,6 +50,7 @@
                 </div>
             </div>
 
+            @if(auth()->user()->isAdmin())
             <div class="flex flex-col space-y-2">
                 <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cabang</label>
                 <div class="relative">
@@ -66,6 +67,7 @@
                     </div>
                 </div>
             </div>
+            @endif
         </div>
 
         <div class="flex items-center space-x-3 w-full md:w-auto justify-end">
@@ -140,6 +142,7 @@
                         @error('category') <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider">{{ $message }}</span> @enderror
                     </div>
 
+                    @if(auth()->user()->isAdmin())
                     <!-- Cabang -->
                     <div class="space-y-2">
                         <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Cabang</label>
@@ -158,6 +161,7 @@
                         </div>
                         @error('unit_id') <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider">{{ $message }}</span> @enderror
                     </div>
+                    @endif
 
                     <!-- Keterangan -->
                     <div class="space-y-2">
@@ -318,8 +322,10 @@
                     <div class="flex flex-col">
                         <h4 class="text-lg font-black text-gray-900">{{ $transaction->category }}</h4>
                         <div class="flex items-center space-x-2 mt-1">
+                            @if(auth()->user()->isAdmin())
                             <span class="text-xs font-bold text-gray-400">{{ $transaction->unit->name }}</span>
                             <span class="text-gray-300">•</span>
+                            @endif
                             <span class="text-xs font-bold text-gray-400">{{ $transaction->transaction_date->format('d M Y') }}</span>
                         </div>
                     </div>
