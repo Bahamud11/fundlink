@@ -1,28 +1,27 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Profile') }}
+        <h2 class="text-3xl font-black text-gray-900 tracking-tight">
+            {{ __('Pengaturan Profil') }}
         </h2>
+        <p class="text-gray-400 font-medium mt-1 text-sm">Kelola informasi akun dan keamanan Anda.</p>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    <livewire:profile.update-profile-information-form />
-                </div>
+    <div class="space-y-12 max-w-4xl">
+        <div class="p-10 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm">
+            <div class="max-w-xl">
+                <livewire:profile.update-profile-information-form />
             </div>
+        </div>
 
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    <livewire:profile.update-password-form />
-                </div>
+        <div class="p-10 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm">
+            <div class="max-w-xl">
+                <livewire:profile.update-password-form />
             </div>
+        </div>
 
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    <livewire:profile.delete-user-form />
-                </div>
+        <div class="p-10 bg-rose-50/30 rounded-[2.5rem] border border-rose-100/50 shadow-sm">
+            <div class="max-w-xl">
+                <livewire:profile.delete-user-form />
             </div>
         </div>
     </div>

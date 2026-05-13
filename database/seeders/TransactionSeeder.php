@@ -27,8 +27,8 @@ class TransactionSeeder extends Seeder
             'pengeluaran' => ['Gaji Pegawai', 'Listrik & Air', 'Internet', 'Konsumsi', 'Alat Tulis Kantor', 'Pemeliharaan', 'Kegiatan Siswa']
         ];
 
-        // Generate transactions for the last 14 days
-        for ($i = 0; $i <= 14; $i++) {
+        // Generate transactions for the last 30 days
+        for ($i = 0; $i <= 30; $i++) {
             $date = Carbon::now()->subDays($i);
             
             // Create 3-5 transactions per day

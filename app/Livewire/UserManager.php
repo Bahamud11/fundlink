@@ -12,6 +12,7 @@ class UserManager extends Component
 {
     use WithPagination;
 
+    public $search = '';
     public $isEditing = false;
     public $userId;
     public $name;
@@ -29,6 +30,11 @@ class UserManager extends Component
             'role' => 'required|in:admin,user',
             'unit_id' => 'required_if:role,user|nullable|exists:units,id',
         ];
+    }
+
+    public function updatingSearch()
+    {
+        $this->resetPage();
     }
 
     public function create()
@@ -81,8 +87,27 @@ class UserManager extends Component
 
     public function render()
     {
+        $users = User::with('unit')
+            ->when($this->search, function($query) {
+                $query->where(function($q) {
+                    $q->where('name', 'like', '%' . $this->search . '%')
+                      ->orWhere('email', 'like', '%' . $this->search . '%');
+                });
+            })
+            ->latest()
+            ->paginate(10);
+
+        // Add online status to each user
+        $users->getCollection()->transform(function($user) {
+            $user->is_online = \Illuminate\Support\Facades\DB::table('sessions')
+                ->where('user_id', $user->id)
+                ->where('last_activity', '>=', now()->subMinutes(5)->getTimestamp())
+                ->exists();
+            return $user;
+        });
+
         return view('livewire.user-manager', [
-            'users' => User::with('unit')->latest()->paginate(10),
+            'users' => $users,
             'units' => Unit::all(),
         ])->layout('layouts.app');
     }
