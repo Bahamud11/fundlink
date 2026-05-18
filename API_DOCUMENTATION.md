@@ -3,7 +3,7 @@
 ## Production Usage Guide
 
 ### Base URL
-**Production**: `https://yourdomain.com/api`
+**Production**: `https://bahamud.my.id/api`
 **Development**: `http://127.0.0.1:8000/api`
 
 ### HTTPS Requirement
@@ -13,7 +13,7 @@ All API requests MUST use HTTPS in production. HTTP requests will be rejected.
 
 #### 1. Login
 ```http
-POST https://yourdomain.com/api/login
+POST https://bahamud.my.id/api/login
 Content-Type: application/json
 
 {
@@ -56,7 +56,7 @@ Authorization: Bearer 1|abc123def456...
 
 #### 3. Logout
 ```http
-POST https://yourdomain.com/api/logout
+POST https://bahamud.my.id/api/logout
 Authorization: Bearer {token}
 ```
 
@@ -64,7 +64,7 @@ Authorization: Bearer {token}
 
 ### Dashboard
 ```http
-GET https://yourdomain.com/api/dashboard
+GET https://bahamud.my.id/api/dashboard
 Authorization: Bearer {token}
 ```
 
@@ -83,7 +83,7 @@ Authorization: Bearer {token}
 
 ### Transactions
 ```http
-GET https://yourdomain.com/api/transactions?page=1
+GET https://bahamud.my.id/api/transactions?page=1
 Authorization: Bearer {token}
 ```
 
@@ -109,7 +109,7 @@ Authorization: Bearer {token}
 
 ### Create Transaction
 ```http
-POST https://yourdomain.com/api/transactions
+POST https://bahamud.my.id/api/transactions
 Authorization: Bearer {token}
 Content-Type: application/json
 
@@ -141,13 +141,13 @@ Content-Type: application/json
 
 ### User Profile
 ```http
-GET https://yourdomain.com/api/user
+GET https://bahamud.my.id/api/user
 Authorization: Bearer {token}
 ```
 
 ### Notifications
 ```http
-GET https://yourdomain.com/api/notifications?page=1
+GET https://bahamud.my.id/api/notifications?page=1
 Authorization: Bearer {token}
 ```
 
@@ -156,7 +156,7 @@ Authorization: Bearer {token}
 ### Flutter/Dart Example
 ```dart
 class ApiService {
-  final String baseUrl = 'https://yourdomain.com/api';
+  final String baseUrl = 'https://bahamud.my.id/api';
   String? _token;
 
   Future<Map<String, dynamic>> login(String email, String password) async {
@@ -201,7 +201,7 @@ class ApiService {
 
 ### React Native/JavaScript Example
 ```javascript
-const API_BASE_URL = 'https://yourdomain.com/api';
+const API_BASE_URL = 'https://bahamud.my.id/api';
 
 class ApiService {
   constructor() {
@@ -261,7 +261,7 @@ class ApiService {
 ### Android/Kotlin Example
 ```kotlin
 class ApiService(private val context: Context) {
-    private val baseUrl = "https://yourdomain.com/api"
+    private val baseUrl = "https://bahamud.my.id/api"
     private var token: String? = null
 
     suspend fun login(email: String, password: String, deviceName: String): Result<LoginResponse> {
@@ -354,16 +354,16 @@ class ApiService(private val context: Context) {
 ### Using cURL
 ```bash
 # Login
-curl -X POST https://yourdomain.com/api/login \
+curl -X POST https://bahamud.my.id/api/login \
   -H "Content-Type: application/json" \
   -d '{"email":"user@example.com","password":"password"}'
 
 # Get dashboard
-curl -X GET https://yourdomain.com/api/dashboard \
+curl -X GET https://bahamud.my.id/api/dashboard \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 
 ### Using Postman/Thunder Client
-1. Set base URL to `https://yourdomain.com/api`
+1. Set base URL to `https://bahamud.my.id/api`
 2. For authenticated requests, add header: `Authorization: Bearer {token}`
 3. Test all endpoints before releasing mobile app

@@ -54,7 +54,7 @@ class AuthService {
 
 ```dart
 class ApiClient {
-  static const String baseUrl = 'https://yourdomain.com/api';
+  static const String baseUrl = 'https://bahamud.my.id/api';
   final AuthService _authService = AuthService();
 
   // Generic GET request
@@ -356,7 +356,7 @@ class Config {
 
   static String get baseUrl {
     return isProduction
-        ? 'https://yourdomain.com/api'
+        ? 'https://bahamud.my.id/api'
         : 'http://10.0.2.2:8000/api'; // Android emulator
   }
 }
