@@ -32,6 +32,31 @@ class FundlinkApiController extends Controller
         ]);
     }
 
+    public function register(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'password' => 'required|string|min:8',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => 'user',
+        ]);
+
+        return response()->json([
+            'token' => $user->createToken($request->device_name ?? 'api')->plainTextToken,
+            'user' => $user->load('unit')
+        ], 201);
+    }
+
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
@@ -77,6 +102,10 @@ class FundlinkApiController extends Controller
     {
         $user = $request->user();
 
+        if (!$user->unit_id && !$user->isAdmin()) {
+            return response()->json(['message' => 'Akun Anda belum ditautkan ke cabang mana pun. Silakan hubungi Admin.'], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'type' => 'required|in:pemasukan,pengeluaran',
             'amount' => 'required|numeric|min:1',
@@ -90,8 +119,12 @@ class FundlinkApiController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
+        // For admin, they can pass unit_id or we fall back to their unit_id (which is usually null). 
+        // Wait, the API didn't have unit_id in validation. Let's allow admin to pass unit_id, else fallback.
+        $unit_id = $user->isAdmin() && $request->has('unit_id') ? $request->unit_id : $user->unit_id;
+
         $data = [
-            'unit_id' => $user->unit_id,
+            'unit_id' => $unit_id,
             'user_id' => $user->id,
             'type' => $request->type,
             'amount' => $request->amount,
@@ -105,6 +138,19 @@ class FundlinkApiController extends Controller
         }
 
         $transaction = Transaction::create($data);
+
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            if ($admin->id !== $user->id) {
+                \App\Models\Notification::create([
+                    'user_id' => $admin->id,
+                    'title' => 'Transaksi Baru',
+                    'message' => "Transaksi {$request->type} sebesar Rp " . number_format($request->amount, 0, ',', '.') . " ditambahkan oleh {$user->name}.",
+                    'type' => 'transaction',
+                    'is_read' => false,
+                ]);
+            }
+        }
 
         return response()->json([
             'message' => 'Transaction recorded successfully',
@@ -122,5 +168,55 @@ class FundlinkApiController extends Controller
         $user = $request->user();
         $notifications = \App\Models\Notification::where('user_id', $user->id)->latest()->paginate(15);
         return response()->json($notifications);
+    }
+
+    public function markNotificationRead(Request $request, $id)
+    {
+        $notification = \App\Models\Notification::where('user_id', $request->user()->id)->findOrFail($id);
+        $notification->update(['is_read' => true]);
+        
+        return response()->json(['message' => 'Notification marked as read']);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'photo' => 'nullable|image|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+
+        if ($request->hasFile('photo')) {
+            $user->profile_photo_path = $request->file('photo')->store('profile-photos', 'public');
+        }
+
+        $user->save();
+
+        return response()->json([
+            'message' => 'Profile updated successfully',
+            'user' => $user->load('unit')
+        ]);
+    }
+
+    public function units()
+    {
+        return response()->json(\App\Models\Unit::all());
+    }
+
+    public function users(Request $request)
+    {
+        if (!$request->user()->isAdmin()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+        return response()->json(User::with('unit')->latest()->get());
     }
 }

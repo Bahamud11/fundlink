@@ -15,38 +15,45 @@
     </div>
 
     @if($isEditing)
-        <!-- New Unit Input Design - Compact Version -->
-        <div class="fixed inset-0 bg-white z-50 overflow-y-auto animate-in fade-in duration-300">
-            <div class="max-w-2xl mx-auto px-6 py-12">
+        <!-- Centered Modal for Unit Input -->
+        <div class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
+            <div class="bg-white w-full max-w-lg rounded-[2rem] shadow-2xl p-6 max-h-[90vh] overflow-y-auto no-scrollbar relative">
                 <!-- Header -->
-                <div class="mb-10">
-                    <h2 class="text-3xl font-black text-gray-900 tracking-tight">{{ $unitId ? 'Edit Detail Unit' : 'Tambahkan Unit' }}</h2>
-                    <p class="text-gray-400 font-medium mt-1 text-sm">Daftarkan unit baru ke dalam sistem.</p>
+                <div class="mb-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-black text-gray-900 tracking-tight">{{ $unitId ? 'Edit Detail Unit' : 'Tambahkan Unit' }}</h2>
+                        <p class="text-gray-400 font-medium mt-0.5 text-xs">Daftarkan unit baru ke dalam sistem.</p>
+                    </div>
+                    <button type="button" wire:click="$set('isEditing', false)" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
 
-                <form wire:submit.prevent="save" class="space-y-10">
+                <form wire:submit.prevent="save" class="space-y-6">
                     <!-- Nama Unit -->
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Nama Unit</label>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nama Unit</label>
                         <div class="border-b border-gray-100 focus-within:border-blue-600 transition-colors pb-2">
-                            <input type="text" wire:model="name" class="w-full text-lg font-bold text-gray-800 bg-transparent border-none focus:ring-0 p-0 placeholder-gray-300" placeholder="Masukkan nama...">
+                            <input type="text" wire:model="name" class="w-full text-sm font-bold text-gray-800 bg-transparent border-none focus:ring-0 p-0 placeholder-gray-300" placeholder="Masukkan nama...">
                         </div>
                         @error('name') <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider">{{ $message }}</span> @enderror
                     </div>
 
                     <!-- Jumlah Anggota -->
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Jumlah Anggota</label>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Jumlah Anggota</label>
                         <div class="border-b border-gray-100 focus-within:border-blue-600 transition-colors pb-2">
-                            <input type="number" wire:model="member_count_input" class="w-full text-lg font-bold text-gray-800 bg-transparent border-none focus:ring-0 p-0 placeholder-gray-300" placeholder="Masukkan jumlah anggota...">
+                            <input type="number" wire:model="member_count_input" class="w-full text-sm font-bold text-gray-800 bg-transparent border-none focus:ring-0 p-0 placeholder-gray-300" placeholder="Masukkan jumlah anggota...">
                         </div>
                     </div>
 
                     <!-- Lokasi -->
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Lokasi</label>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Lokasi</label>
                         <div class="relative border-b border-gray-100 focus-within:border-blue-600 transition-colors pb-2">
-                            <select wire:model="address" class="w-full text-lg font-bold text-gray-800 bg-transparent border-none focus:ring-0 p-0 !appearance-none !bg-none cursor-pointer" style="-webkit-appearance: none; -moz-appearance: none; background-image: none !important;">
+                            <select wire:model="address" class="w-full text-sm font-bold text-gray-800 bg-transparent border-none focus:ring-0 p-0 !appearance-none !bg-none cursor-pointer" style="-webkit-appearance: none; -moz-appearance: none; background-image: none !important;">
                                 <option value="">Pilih lokasi</option>
                                 <option value="Bogor">Bogor</option>
                                 <option value="Depok">Depok</option>
@@ -64,20 +71,20 @@
                     </div>
 
                     <!-- Dana Awal -->
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Dana Awal</label>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Dana Awal</label>
                         <div class="border-b border-gray-100 focus-within:border-blue-600 transition-colors pb-2">
-                            <input type="number" wire:model="initial_balance" class="w-full text-lg font-bold text-gray-800 bg-transparent border-none focus:ring-0 p-0 placeholder-gray-300" placeholder="Masukkan dana awal...">
+                            <input type="number" wire:model="initial_balance" class="w-full text-sm font-bold text-gray-800 bg-transparent border-none focus:ring-0 p-0 placeholder-gray-300" placeholder="Masukkan dana awal...">
                         </div>
                         @error('initial_balance') <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider">{{ $message }}</span> @enderror
                     </div>
 
                     <!-- Footer Buttons -->
-                    <div class="pt-10 flex space-x-4">
-                        <button type="button" wire:click="$set('isEditing', false)" class="flex-1 py-4 border border-blue-600 rounded-xl text-sm font-bold text-blue-600 hover:bg-gray-50 transition-all">
+                    <div class="pt-6 flex space-x-3">
+                        <button type="button" wire:click="$set('isEditing', false)" class="flex-1 py-3 border border-blue-600 rounded-xl text-xs font-bold text-blue-600 hover:bg-gray-50 transition-all">
                             Batal
                         </button>
-                        <button type="submit" class="flex-1 py-4 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all">
+                        <button type="submit" class="flex-1 py-3 bg-blue-600 text-white rounded-xl text-xs font-bold shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all">
                             {{ $unitId ? 'Simpan' : 'Buat' }}
                         </button>
                     </div>
@@ -97,7 +104,7 @@
             </div>
         </div>
 
-        <button wire:click="create" class="flex items-center space-x-2 px-8 py-4 bg-blue-600 text-white rounded-2xl text-sm font-bold shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all">
+        <button wire:click="create" class="w-full md:w-auto flex items-center justify-center space-x-2 px-8 py-4 bg-blue-600 text-white rounded-2xl text-sm font-bold shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
             </svg>
@@ -106,13 +113,13 @@
     </div>
 
     <!-- Unit List (Card-based) -->
-    <div class="space-y-6">
+    <div class="space-y-4 sm:space-y-6">
         @forelse($units as $unit)
-            <div class="group bg-white p-6 rounded-3xl border border-transparent hover:border-gray-100 hover:shadow-2xl hover:shadow-gray-100/50 transition-all duration-300 flex items-center justify-between">
-                <div class="flex items-center space-x-6">
+            <div class="group bg-white p-5 sm:p-6 rounded-3xl border border-transparent hover:border-gray-100 hover:shadow-2xl hover:shadow-gray-100/50 transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center space-x-4 sm:space-x-6">
                     <!-- Icon Indicator -->
-                    <div class="p-4 rounded-2xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
-                        <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="p-3 sm:p-4 rounded-2xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+                        <svg class="h-6 w-6 sm:h-8 sm:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                     </div>
@@ -120,9 +127,9 @@
                     <!-- Details -->
                     <div class="flex flex-col">
                         <div class="flex items-center space-x-3">
-                            <h4 class="text-lg font-black text-gray-900 tracking-tight">{{ $unit->name }}</h4>
-                            <!-- Subtle Actions on Hover -->
-                            <div class="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <h4 class="text-base sm:text-lg font-black text-gray-900 tracking-tight">{{ $unit->name }}</h4>
+                            <!-- Subtle Actions on Hover / Visible on Mobile -->
+                            <div class="flex space-x-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                                 <button wire:click="edit({{ $unit->id }})" class="text-blue-500 hover:text-blue-700 transition-colors">
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -135,12 +142,12 @@
                                 </button>
                             </div>
                         </div>
-                        <p class="text-xs font-bold text-gray-400 mt-1 uppercase tracking-widest">{{ $unit->users_count }} Anggota • {{ $unit->address ?? 'Pusat' }}</p>
+                        <p class="text-[10px] sm:text-xs font-bold text-gray-400 mt-1 uppercase tracking-widest">{{ $unit->users_count }} Anggota • {{ $unit->address ?? 'Pusat' }}</p>
                     </div>
                 </div>
                 
-                <div class="text-right">
-                    <p class="text-2xl font-black text-gray-700 tracking-tight">
+                <div class="text-left sm:text-right pl-14 sm:pl-0">
+                    <p class="text-xl sm:text-2xl font-black text-gray-700 tracking-tight">
                         Rp {{ number_format($unit->balance, 0, ',', '.') }},00
                     </p>
                 </div>

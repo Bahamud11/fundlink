@@ -77,6 +77,19 @@ class TransactionManager extends Component
 
         Transaction::create($data);
 
+        $admins = \App\Models\User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            if ($admin->id !== $user->id) {
+                \App\Models\Notification::create([
+                    'user_id' => $admin->id,
+                    'title' => 'Transaksi Baru',
+                    'message' => "Transaksi {$this->type} sebesar Rp " . number_format($this->amount, 0, ',', '.') . " ditambahkan oleh {$user->name}.",
+                    'type' => 'transaction',
+                    'is_read' => false,
+                ]);
+            }
+        }
+
         $this->reset(['amount', 'category', 'description', 'attachment']);
         if ($user->isAdmin()) {
             $this->reset('unit_id');

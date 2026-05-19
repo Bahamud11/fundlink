@@ -15,48 +15,55 @@
     </div>
 
     @if($isEditing)
-        <!-- User Input Design - Compact Version -->
-        <div class="fixed inset-0 bg-white z-50 overflow-y-auto animate-in fade-in duration-300">
-            <div class="max-w-2xl mx-auto px-6 py-12">
+        <!-- Centered Modal for User Input -->
+        <div class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
+            <div class="bg-white w-full max-w-lg rounded-[2rem] shadow-2xl p-6 max-h-[90vh] overflow-y-auto no-scrollbar relative">
                 <!-- Header -->
-                <div class="mb-10">
-                    <h2 class="text-3xl font-black text-gray-900 tracking-tight">{{ $userId ? 'Edit Pengguna' : 'Tambah Pengguna' }}</h2>
-                    <p class="text-gray-400 font-medium mt-1 text-sm">Silakan lengkapi detail pengguna di bawah ini.</p>
+                <div class="mb-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-black text-gray-900 tracking-tight">{{ $userId ? 'Edit Pengguna' : 'Tambah Pengguna' }}</h2>
+                        <p class="text-gray-400 font-medium mt-0.5 text-xs">Silakan lengkapi detail pengguna di bawah ini.</p>
+                    </div>
+                    <button type="button" wire:click="$set('isEditing', false)" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
 
-                <form wire:submit.prevent="save" class="space-y-10">
+                <form wire:submit.prevent="save" class="space-y-6">
                     <!-- Nama -->
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Nama Lengkap</label>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nama Lengkap</label>
                         <div class="border-b border-gray-100 focus-within:border-blue-600 transition-colors pb-2">
-                            <input type="text" wire:model="name" class="w-full text-lg font-bold text-gray-800 bg-transparent border-none focus:ring-0 p-0 placeholder-gray-300" placeholder="Masukkan nama...">
+                            <input type="text" wire:model="name" class="w-full text-sm font-bold text-gray-800 bg-transparent border-none focus:ring-0 p-0 placeholder-gray-300" placeholder="Masukkan nama...">
                         </div>
                         @error('name') <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider">{{ $message }}</span> @enderror
                     </div>
 
                     <!-- Email -->
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Email</label>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Email</label>
                         <div class="border-b border-gray-100 focus-within:border-blue-600 transition-colors pb-2">
-                            <input type="email" wire:model="email" class="w-full text-lg font-bold text-gray-800 bg-transparent border-none focus:ring-0 p-0 placeholder-gray-300" placeholder="Masukkan email...">
+                            <input type="email" wire:model="email" class="w-full text-sm font-bold text-gray-800 bg-transparent border-none focus:ring-0 p-0 placeholder-gray-300" placeholder="Masukkan email...">
                         </div>
                         @error('email') <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider">{{ $message }}</span> @enderror
                     </div>
 
                     <!-- Password -->
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Password {{ $userId ? '(Kosongkan jika tidak ingin ganti)' : '' }}</label>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Password {{ $userId ? '(Kosongkan jika tidak ingin ganti)' : '' }}</label>
                         <div class="border-b border-gray-100 focus-within:border-blue-600 transition-colors pb-2">
-                            <input type="password" wire:model="password" class="w-full text-lg font-bold text-gray-800 bg-transparent border-none focus:ring-0 p-0 placeholder-gray-300" placeholder="Masukkan password...">
+                            <input type="password" wire:model="password" class="w-full text-sm font-bold text-gray-800 bg-transparent border-none focus:ring-0 p-0 placeholder-gray-300" placeholder="Masukkan password...">
                         </div>
                         @error('password') <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider">{{ $message }}</span> @enderror
                     </div>
 
                     <!-- Role -->
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Role</label>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Role</label>
                         <div class="relative border-b border-gray-100 focus-within:border-blue-600 transition-colors pb-2">
-                            <select wire:model.live="role" class="w-full text-lg font-bold text-gray-800 bg-transparent border-none focus:ring-0 p-0 !appearance-none !bg-none cursor-pointer" style="-webkit-appearance: none; -moz-appearance: none; background-image: none !important;">
+                            <select wire:model.live="role" class="w-full text-sm font-bold text-gray-800 bg-transparent border-none focus:ring-0 p-0 !appearance-none !bg-none cursor-pointer" style="-webkit-appearance: none; -moz-appearance: none; background-image: none !important;">
                                 <option value="user">User / Operator</option>
                                 <option value="admin">Administrator</option>
                             </select>
@@ -70,10 +77,10 @@
 
                     @if($role === 'user')
                     <!-- Cabang -->
-                    <div class="space-y-2">
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Unit / Cabang</label>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Unit / Cabang</label>
                         <div class="relative border-b border-gray-100 focus-within:border-blue-600 transition-colors pb-2">
-                            <select wire:model="unit_id" class="w-full text-lg font-bold text-gray-800 bg-transparent border-none focus:ring-0 p-0 !appearance-none !bg-none cursor-pointer" style="-webkit-appearance: none; -moz-appearance: none; background-image: none !important;">
+                            <select wire:model="unit_id" class="w-full text-sm font-bold text-gray-800 bg-transparent border-none focus:ring-0 p-0 !appearance-none !bg-none cursor-pointer" style="-webkit-appearance: none; -moz-appearance: none; background-image: none !important;">
                                 <option value="">Pilih unit tugas</option>
                                 @foreach($units as $unit)
                                     <option value="{{ $unit->id }}">{{ $unit->name }}</option>
@@ -90,11 +97,11 @@
                     @endif
 
                     <!-- Footer Buttons -->
-                    <div class="pt-10 flex space-x-4">
-                        <button type="button" wire:click="$set('isEditing', false)" class="flex-1 py-4 border border-blue-600 rounded-xl text-sm font-bold text-blue-600 hover:bg-gray-50 transition-all">
+                    <div class="pt-6 flex space-x-3">
+                        <button type="button" wire:click="$set('isEditing', false)" class="flex-1 py-3 border border-blue-600 rounded-xl text-xs font-bold text-blue-600 hover:bg-gray-50 transition-all">
                             Batal
                         </button>
-                        <button type="submit" class="flex-1 py-4 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all">
+                        <button type="submit" class="flex-1 py-3 bg-blue-600 text-white rounded-xl text-xs font-bold shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all">
                             Simpan
                         </button>
                     </div>
@@ -114,7 +121,7 @@
             </div>
         </div>
 
-        <button wire:click="create" class="flex items-center space-x-2 px-8 py-4 bg-blue-600 text-white rounded-2xl text-sm font-bold shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all">
+        <button wire:click="create" class="w-full md:w-auto flex items-center justify-center space-x-2 px-8 py-4 bg-blue-600 text-white rounded-2xl text-sm font-bold shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
             </svg>
@@ -123,21 +130,27 @@
     </div>
 
     <!-- User List (Card-based) -->
-    <div class="space-y-6">
+    <div class="space-y-4 sm:space-y-6">
         @forelse($users as $user)
-            <div class="group bg-white p-6 rounded-3xl border border-transparent hover:border-gray-100 hover:shadow-2xl hover:shadow-gray-100/50 transition-all duration-300 flex items-center justify-between">
-                <div class="flex items-center space-x-6">
-                    <!-- Icon Indicator -->
-                    <div class="h-16 w-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-black text-xl group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
-                        {{ substr($user->name, 0, 1) }}
+            <div class="group bg-white p-5 sm:p-6 rounded-3xl border border-transparent hover:border-gray-100 hover:shadow-2xl hover:shadow-gray-100/50 transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center space-x-4 sm:space-x-6">
+                    <!-- Icon Indicator / Profile Image -->
+                    <div class="h-12 w-12 sm:h-16 sm:w-16 rounded-2xl overflow-hidden shrink-0">
+                        @if($user->profile_photo_path)
+                            <img src="{{ Storage::url($user->profile_photo_path) }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
+                        @else
+                            <div class="w-full h-full bg-blue-50 text-blue-600 flex items-center justify-center font-black text-base sm:text-xl group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+                                {{ substr($user->name, 0, 1) }}
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Details -->
                     <div class="flex flex-col">
                         <div class="flex items-center space-x-3">
-                            <h4 class="text-lg font-black text-gray-900 tracking-tight">{{ $user->name }}</h4>
-                            <!-- Subtle Actions on Hover -->
-                            <div class="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <h4 class="text-base sm:text-lg font-black text-gray-900 tracking-tight">{{ $user->name }}</h4>
+                            <!-- Subtle Actions on Hover / Visible on Mobile -->
+                            <div class="flex space-x-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                                 <button wire:click="edit({{ $user->id }})" class="text-blue-500 hover:text-blue-700 transition-colors">
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -152,15 +165,15 @@
                                 @endif
                             </div>
                         </div>
-                        <p class="text-xs font-bold text-gray-400 mt-1 uppercase tracking-widest">
+                        <p class="text-[10px] sm:text-xs font-bold text-gray-400 mt-1 uppercase tracking-widest">
                             {{ $user->unit->name ?? ($user->role === 'admin' ? 'Administrator' : 'Tidak ada cabang') }}
                         </p>
                     </div>
                 </div>
                 
-                <div class="flex items-center space-x-2">
-                    <div class="h-2 w-2 rounded-full {{ $user->is_online ? 'bg-blue-600' : 'bg-gray-300' }}"></div>
-                    <span class="text-lg font-bold {{ $user->is_online ? 'text-blue-600' : 'text-gray-400' }} tracking-tight">
+                <div class="flex items-center space-x-2 pl-16 sm:pl-0">
+                    <div class="h-1.5 w-1.5 rounded-full {{ $user->is_online ? 'bg-blue-600' : 'bg-gray-300' }}"></div>
+                    <span class="text-sm font-bold {{ $user->is_online ? 'text-blue-600' : 'text-gray-400' }} tracking-tight">
                         {{ $user->is_online ? 'Online' : 'Offline' }}
                     </span>
                 </div>

@@ -5,11 +5,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rule;
 use Livewire\Volt\Component;
+use Livewire\WithFileUploads;
 
 new class extends Component
 {
+    use WithFileUploads;
+
     public string $name = '';
     public string $email = '';
+    public $photo;
 
     /**
      * Mount the component.
@@ -30,9 +34,17 @@ new class extends Component
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
+            'photo' => ['nullable', 'image', 'max:2048'],
         ]);
 
-        $user->fill($validated);
+        $user->fill([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+        ]);
+
+        if ($this->photo) {
+            $user->profile_photo_path = $this->photo->store('profile-photos', 'public');
+        }
 
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
@@ -74,6 +86,40 @@ new class extends Component
     </header>
 
     <form wire:submit="updateProfileInformation" class="mt-6 space-y-6">
+        <!-- Foto Profil -->
+        <div class="flex flex-col space-y-4">
+            <x-input-label :value="__('Foto Profil')" />
+            <div class="flex items-center space-x-6">
+                <!-- Preview -->
+                <div class="shrink-0">
+                    @if ($photo)
+                        <img class="h-24 w-24 object-cover rounded-full shadow-md" src="{{ $photo->temporaryUrl() }}" alt="Preview Foto Profil">
+                    @elseif (Auth::user()->profile_photo_path)
+                        <img class="h-24 w-24 object-cover rounded-full shadow-md" src="{{ Storage::url(Auth::user()->profile_photo_path) }}" alt="{{ Auth::user()->name }}">
+                    @else
+                        <div class="h-24 w-24 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-black text-2xl shadow-md">
+                            {{ substr(Auth::user()->name, 0, 1) }}
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Input File -->
+                <div>
+                    <label class="cursor-pointer inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
+                        Pilih Foto
+                        <input type="file" wire:model="photo" class="hidden" accept="image/*">
+                    </label>
+                    <p class="mt-2 text-xs text-gray-500">
+                        Format JPG, PNG, GIF. Maks. 2MB.
+                    </p>
+                    <div wire:loading wire:target="photo" class="mt-2 text-sm text-blue-600 font-medium">
+                        Mengunggah...
+                    </div>
+                </div>
+            </div>
+            <x-input-error class="mt-2" :messages="$errors->get('photo')" />
+        </div>
+
         <div>
             <x-input-label for="name" :value="__('Name')" />
             <x-text-input wire:model="name" id="name" name="name" type="text" class="mt-1 block w-full" required autofocus autocomplete="name" />

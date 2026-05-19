@@ -37,12 +37,12 @@ new #[Layout('layouts.guest')] class extends Component
 }; ?>
 
 <div class="text-center">
-    <h2 class="text-3xl font-black text-gray-900 tracking-tight mb-1">Daftar Akun</h2>
-    <p class="text-gray-400 font-medium text-sm mb-10 uppercase tracking-widest">Sistem Manajemen Keuangan</p>
+    <h2 class="text-2xl font-black text-gray-900 tracking-tight mb-1">Daftar Akun</h2>
+    <p class="text-gray-400 font-medium text-xs mb-6 uppercase tracking-widest">Sistem Manajemen Keuangan</p>
 
-    <form wire:submit="register" class="space-y-6 text-left">
+    <form wire:submit="register" class="space-y-4 text-left">
         <!-- Email Field -->
-        <div class="space-y-2">
+        <div class="space-y-1">
             <label for="email" class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email</label>
             <div class="relative group">
                 <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors">
@@ -51,14 +51,14 @@ new #[Layout('layouts.guest')] class extends Component
                     </svg>
                 </div>
                 <input wire:model="email" id="email" type="email" name="email" required autofocus 
-                    class="w-full pl-12 pr-4 py-4 bg-white border-gray-100 border rounded-2xl shadow-sm focus:ring-0 focus:border-blue-600 text-gray-900 placeholder:text-gray-300 transition-all duration-200" 
+                    class="w-full pl-12 pr-4 py-3 bg-white border-gray-100 border rounded-2xl shadow-sm focus:ring-0 focus:border-blue-600 text-gray-900 placeholder:text-gray-300 transition-all duration-200 text-sm" 
                     placeholder="Masukkan Email">
             </div>
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            <x-input-error :messages="$errors->get('email')" class="mt-1" />
         </div>
 
         <!-- Name Field -->
-        <div class="space-y-2">
+        <div class="space-y-1">
             <label for="name" class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nama</label>
             <div class="relative group">
                 <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors">
@@ -67,14 +67,14 @@ new #[Layout('layouts.guest')] class extends Component
                     </svg>
                 </div>
                 <input wire:model="name" id="name" type="text" name="name" required 
-                    class="w-full pl-12 pr-4 py-4 bg-white border-gray-100 border rounded-2xl shadow-sm focus:ring-0 focus:border-blue-600 text-gray-900 placeholder:text-gray-300 transition-all duration-200" 
+                    class="w-full pl-12 pr-4 py-3 bg-white border-gray-100 border rounded-2xl shadow-sm focus:ring-0 focus:border-blue-600 text-gray-900 placeholder:text-gray-300 transition-all duration-200 text-sm" 
                     placeholder="Masukkan Nama">
             </div>
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+            <x-input-error :messages="$errors->get('name')" class="mt-1" />
         </div>
 
         <!-- Password Field -->
-        <div class="space-y-2">
+        <div class="space-y-1">
             <label for="password" class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Kata Kunci</label>
             <div class="relative group">
                 <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors">
@@ -83,7 +83,7 @@ new #[Layout('layouts.guest')] class extends Component
                     </svg>
                 </div>
                 <input wire:model="password" id="password" type="password" name="password" required 
-                    class="w-full pl-12 pr-12 py-4 bg-white border-gray-100 border rounded-2xl shadow-sm focus:ring-0 focus:border-blue-600 text-gray-900 placeholder:text-gray-300 transition-all duration-200" 
+                    class="w-full pl-12 pr-12 py-3 bg-white border-gray-100 border rounded-2xl shadow-sm focus:ring-0 focus:border-blue-600 text-gray-900 placeholder:text-gray-300 transition-all duration-200 text-sm" 
                     placeholder="Masukkan Password">
                 <!-- Right icon from mockup (dice/dots) -->
                 <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300">
@@ -96,17 +96,17 @@ new #[Layout('layouts.guest')] class extends Component
                     </svg>
                 </div>
             </div>
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+            <x-input-error :messages="$errors->get('password')" class="mt-1" />
         </div>
 
-        <div class="pt-4">
-            <button type="submit" class="w-full py-4 bg-blue-600 text-white rounded-2xl text-sm font-black shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all duration-200 uppercase tracking-widest">
+        <div class="pt-2">
+            <button type="submit" class="w-full py-3 bg-blue-600 text-white rounded-2xl text-xs font-black shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all duration-200 uppercase tracking-widest">
                 Konfirmasi
             </button>
         </div>
 
-        <div class="text-center mt-6">
-            <p class="text-sm text-gray-500">
+        <div class="text-center mt-4">
+            <p class="text-xs text-gray-500">
                 Sudah memiliki akun? 
                 <a href="{{ route('login') }}" class="text-blue-600 font-semibold hover:underline ml-1">Masuk</a>
             </p>

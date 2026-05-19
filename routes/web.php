@@ -18,8 +18,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
-Route::view('profile', 'profile')
-    ->middleware(['auth'])
-    ->name('profile');
+Route::get('profile', function () {
+    if (auth()->user()->isAdmin()) {
+        return redirect()->route('dashboard');
+    }
+    return view('profile');
+})->middleware(['auth'])->name('profile');
 
 require __DIR__.'/auth.php';
