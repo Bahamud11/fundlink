@@ -257,15 +257,7 @@
                         <div class="flex items-center justify-between mb-8">
                             <div class="flex items-center space-x-4">
                                 <div class="p-3 rounded-2xl {{ $selectedTransaction->type === 'pemasukan' ? 'bg-blue-50 text-blue-600' : 'bg-rose-50 text-rose-600' }} shadow-inner shrink-0">
-                                    @if($selectedTransaction->type === 'pemasukan')
-                                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                        </svg>
-                                    @else
-                                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
-                                        </svg>
-                                    @endif
+                                    <img src="{{ asset($selectedTransaction->type === 'pemasukan' ? 'images/pemasukan.png' : 'images/Pengeluaran.png') }}" class="h-6 w-6 object-contain" alt="{{ $selectedTransaction->type }}">
                                 </div>
                                 <div>
                                     <h2 class="text-xl font-black text-gray-900 tracking-tight">{{ $selectedTransaction->category }}</h2>
@@ -354,15 +346,7 @@
                 <div class="flex items-center space-x-4 sm:space-x-6">
                     <!-- Icon Indicator -->
                     <div class="p-3 sm:p-4 rounded-2xl {{ $transaction->type === 'pemasukan' ? 'bg-blue-50 text-blue-600' : 'bg-rose-50 text-rose-600' }}">
-                        @if($transaction->type === 'pemasukan')
-                            <svg class="h-6 w-6 sm:h-8 sm:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                            </svg>
-                        @else
-                            <svg class="h-6 w-6 sm:h-8 sm:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
-                            </svg>
-                        @endif
+                        <img src="{{ asset($transaction->type === 'pemasukan' ? 'images/pemasukan.png' : 'images/Pengeluaran.png') }}" class="h-6 w-6 sm:h-8 sm:w-8 object-contain" alt="{{ $transaction->type }}">
                     </div>
 
                     <!-- Details -->

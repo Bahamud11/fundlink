@@ -10,9 +10,7 @@
             @if(auth()->user()->notifications()->where('is_read', false)->exists())
                 <span class="absolute top-2 right-2 h-2.5 w-2.5 bg-red-500 rounded-full border-2 border-white"></span>
             @endif
-            <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-            </svg>
+            <img src="{{ asset('images/lonceng.png') }}" class="h-7 w-7 object-contain" alt="Notifikasi">
         </a>
     </div>
 
@@ -23,11 +21,7 @@
             <div class="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500"></div>
             <div class="flex items-center space-x-3 mb-10">
                 <div class="p-2 bg-white/20 rounded-lg">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                        <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" />
-                        <path d="M4 6v12c0 1.1.9 2 2 2h14v-4" />
-                        <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z" />
-                    </svg>
+                    <img src="{{ asset('images/saldo.png') }}" class="h-5 w-5 object-contain brightness-0 invert" alt="Saldo">
                 </div>
                 <span class="text-xs font-black uppercase tracking-widest opacity-80">Total Saldo</span>
             </div>
@@ -38,10 +32,7 @@
         <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm group hover:border-blue-100 transition-all duration-300">
             <div class="flex items-center space-x-3 mb-10 text-blue-600">
                 <div class="p-2 bg-blue-50 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                        <path d="M23 6l-9.5 9.5-5-5L1 18" />
-                        <path d="M17 6h6v6" />
-                    </svg>
+                    <img src="{{ asset('images/pemasukan.png') }}" class="h-5 w-5 object-contain transition-all duration-300 group-hover:brightness-0 group-hover:invert" alt="Pemasukan">
                 </div>
                 <span class="text-xs font-black uppercase tracking-widest text-gray-400 group-hover:text-blue-600">Pemasukan</span>
             </div>
@@ -52,10 +43,7 @@
         <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm group hover:border-rose-100 transition-all duration-300">
             <div class="flex items-center space-x-3 mb-10 text-rose-500">
                 <div class="p-2 bg-rose-50 rounded-lg group-hover:bg-rose-500 group-hover:text-white transition-colors duration-300">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                        <path d="M23 18l-9.5-9.5-5 5L1 6" />
-                        <path d="M17 18h6v-6" />
-                    </svg>
+                    <img src="{{ asset('images/Pengeluaran.png') }}" class="h-5 w-5 object-contain transition-all duration-300 group-hover:brightness-0 group-hover:invert" alt="Pengeluaran">
                 </div>
                 <span class="text-xs font-black uppercase tracking-widest text-gray-400 group-hover:text-rose-500">Pengeluaran</span>
             </div>
@@ -70,9 +58,7 @@
             <div class="flex-1 min-w-0 w-full overflow-hidden">
                 <div class="flex items-center space-x-3 mb-10">
                     <div class="p-2 bg-gray-50 rounded-lg text-gray-400">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                            <path d="M7 10l5 5 5-5M7 14l5-5 5 5" />
-                        </svg>
+                        <img src="{{ asset('images/trendmingguan.png') }}" class="h-5 w-5 object-contain" alt="Trend Mingguan">
                     </div>
                     <h3 class="text-xl font-black text-gray-900 tracking-tight">Trend Mingguan</h3>
                 </div>
@@ -189,9 +175,7 @@
             <div wire:click="viewDetail({{ $transaction->id }})" class="group cursor-pointer bg-white p-6 rounded-3xl border border-transparent hover:border-gray-100 hover:shadow-xl hover:shadow-gray-100/50 transition-all duration-300 flex items-center justify-between">
                 <div class="flex items-center space-x-6">
                     <div class="p-3 rounded-2xl {{ $transaction->type === 'pemasukan' ? 'bg-blue-50 text-blue-600' : 'bg-rose-50 text-rose-600' }} group-hover:scale-110 transition-transform duration-300">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $transaction->type === 'pemasukan' ? 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' : 'M13 17h8m0 0V9m0 8l-8-8-4 4-6-6' }}" />
-                        </svg>
+                        <img src="{{ asset($transaction->type === 'pemasukan' ? 'images/pemasukan.png' : 'images/Pengeluaran.png') }}" class="h-6 w-6 object-contain" alt="{{ $transaction->type }}">
                     </div>
                     <div>
                         <p class="text-lg font-black text-gray-900 tracking-tight">{{ $transaction->category }}</p>
@@ -224,15 +208,7 @@
                         <div class="flex items-center justify-between mb-8">
                             <div class="flex items-center space-x-4">
                                 <div class="p-3 rounded-2xl {{ $selectedTransaction->type === 'pemasukan' ? 'bg-blue-50 text-blue-600' : 'bg-rose-50 text-rose-600' }} shadow-inner shrink-0">
-                                    @if($selectedTransaction->type === 'pemasukan')
-                                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                        </svg>
-                                    @else
-                                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
-                                        </svg>
-                                    @endif
+                                    <img src="{{ asset($selectedTransaction->type === 'pemasukan' ? 'images/pemasukan.png' : 'images/Pengeluaran.png') }}" class="h-6 w-6 object-contain" alt="{{ $selectedTransaction->type }}">
                                 </div>
                                 <div>
                                     <h2 class="text-xl font-black text-gray-900 tracking-tight">{{ $selectedTransaction->category }}</h2>

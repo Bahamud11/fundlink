@@ -16,7 +16,7 @@ new class extends Component
     }
 }; ?>
 
-<div class="shrink-0">
+<div class="shrink-0 lg:w-72">
     <!-- Backdrop Overlay (Only on Mobile when sidebar is open) -->
     <div x-show="openSidebar" 
          x-transition:enter="transition-opacity ease-out duration-300"
@@ -59,26 +59,26 @@ new class extends Component
 
         <!-- Navigation Menu -->
         <nav class="flex-1 px-6 py-4 space-y-1 overflow-y-auto">
-            <x-sidebar-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" icon="home">
+            <x-sidebar-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" icon="dashboard">
                 Dashboard
             </x-sidebar-link>
 
-            <x-sidebar-link :href="route('transactions')" :active="request()->routeIs('transactions')" icon="receipt">
+            <x-sidebar-link :href="route('transactions')" :active="request()->routeIs('transactions')" icon="transaksi">
                 Transaksi
             </x-sidebar-link>
 
             @if(auth()->user()->isAdmin())
-                <x-sidebar-link :href="route('units')" :active="request()->routeIs('units')" icon="office">
+                <x-sidebar-link :href="route('units')" :active="request()->routeIs('units')" icon="cabang">
                     Unit
                 </x-sidebar-link>
 
-                <x-sidebar-link :href="route('users')" :active="request()->routeIs('users')" icon="users">
+                <x-sidebar-link :href="route('users')" :active="request()->routeIs('users')" icon="profil">
                     Pengguna
                 </x-sidebar-link>
             @endif
 
             @if(!auth()->user()->isAdmin())
-            <x-sidebar-link :href="route('profile')" :active="request()->routeIs('profile')" icon="profile">
+            <x-sidebar-link :href="route('profile')" :active="request()->routeIs('profile')" icon="profil">
                 Profil Saya
             </x-sidebar-link>
             @endif
@@ -101,9 +101,7 @@ new class extends Component
             </div>
             
             <button wire:click="logout" class="w-full group flex items-center space-x-4 p-4 rounded-xl text-gray-500 hover:bg-red-50 hover:text-red-600 transition-all duration-200 font-bold">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
+                <img src="{{ asset('images/logout.png') }}" class="h-5 w-5 object-contain opacity-70 group-hover:opacity-100 transition-opacity" alt="Keluar icon">
                 <span class="text-sm">Keluar</span>
             </button>
         </div>
