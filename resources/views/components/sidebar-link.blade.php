@@ -6,7 +6,7 @@ $classes = ($active ?? false)
             : 'flex items-center space-x-4 p-4 rounded-lg text-gray-400 hover:text-gray-600 transition-all duration-200 font-bold group';
 
 if ($active ?? false) {
-    $imgName = ($icon === 'profil') ? 'profile filled' : ($icon . ' filled');
+    $imgName = ($icon === 'profil') ? 'profile_filled' : ($icon . '_filled');
 } else {
     $imgName = $icon;
 }
