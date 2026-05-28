@@ -18,7 +18,7 @@ new class extends Component
 
 <div class="shrink-0 lg:w-72">
     <!-- Backdrop Overlay (Only on Mobile when sidebar is open) -->
-    <div x-show="openSidebar" 
+    <div x-show="openSidebar"
          x-transition:enter="transition-opacity ease-out duration-300"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
@@ -32,7 +32,7 @@ new class extends Component
     <!-- Sidebar Aside -->
     <aside :class="openSidebar ? 'translate-x-0' : '-translate-x-full'"
            class="fixed inset-y-0 left-0 w-72 bg-white border-r border-gray-100 flex flex-col h-full z-50 lg:z-20 transform lg:transform-none lg:translate-x-0 lg:static transition-transform duration-300 ease-in-out">
-        
+
         <!-- Mobile Close Button inside aside -->
         <div class="lg:hidden absolute right-4 top-8">
             <button @click="openSidebar = false" class="p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-50 transition-all">
@@ -41,12 +41,11 @@ new class extends Component
                 </svg>
             </button>
         </div>
-        
+
         <!-- Header: Logo & Title -->
-        <div class="p-8">
-            <div class="flex items-center space-x-4">
+        <div class="px-6 py-8"> <div class="flex items-center space-x-4">
                 <div class="w-16 h-16 shrink-0">
-                    <img src="{{ asset('images/logo.png') }}" alt="Fundlink Logo" class="w-full h-full object-contain rounded-2xl shadow-lg shadow-blue-100">
+                    <img src="{{ asset('images/logo.svg') }}" alt="Fundlink Logo" class="w-full h-full object-contain rounded-2xl shadow-lg shadow-blue-100">
                 </div>
                 <div>
                     <h1 class="text-2xl font-black text-gray-800 leading-tight">
@@ -58,7 +57,7 @@ new class extends Component
         </div>
 
         <!-- Navigation Menu -->
-        <nav class="flex-1 px-6 py-4 space-y-1 overflow-y-auto">
+        <nav class="flex-1 px-6 py-2 space-y-1 overflow-y-auto">
             <x-sidebar-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" icon="dashboard">
                 Dashboard
             </x-sidebar-link>
@@ -99,9 +98,9 @@ new class extends Component
                     <p class="text-[10px] text-gray-500 font-medium uppercase tracking-widest truncate">{{ auth()->user()->isAdmin() ? 'Administrator' : 'User' }}</p>
                 </div>
             </div>
-            
+
             <button wire:click="logout" class="w-full group flex items-center space-x-4 p-4 rounded-xl text-gray-500 hover:bg-red-50 hover:text-red-600 transition-all duration-200 font-bold">
-                <img src="{{ asset('images/logout.png') }}" class="h-5 w-5 object-contain opacity-70 group-hover:opacity-100 transition-opacity" alt="Keluar icon">
+                <img src="{{ asset('images/logout.svg') }}" class="h-5 w-5 object-contain opacity-70 group-hover:opacity-100 transition-opacity" alt="Keluar icon">
                 <span class="text-sm">Keluar</span>
             </button>
         </div>

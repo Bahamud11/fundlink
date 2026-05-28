@@ -13,6 +13,6 @@ if ($active ?? false) {
 @endphp
 
 <a {{ $attributes->merge(['class' => $classes]) }} wire:navigate>
-    <img src="{{ asset('images/' . $imgName . '.png') }}" class="h-6 w-6 object-contain {{ $active ? 'brightness-0 invert' : 'opacity-70 group-hover:opacity-100 transition-opacity' }}" alt="{{ $slot }} icon">
+    <img src="{{ asset('images/' . $imgName . '.svg') }}" class="h-6 w-6 object-contain {{ $active ? 'brightness-0 invert' : 'opacity-70 group-hover:opacity-100 transition-opacity' }}" alt="{{ $slot }} icon">
     <span class="text-lg">{{ $slot }}</span>
 </a>

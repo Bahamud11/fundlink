@@ -9,7 +9,7 @@
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=inter:400,500,600&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -30,7 +30,7 @@
                         </svg>
                     </button>
                     <div class="flex items-center space-x-3">
-                        <img src="{{ asset('images/logo.png') }}" alt="Fundlink Logo" class="h-8 w-auto">
+                        <img src="{{ asset('images/logo.svg') }}" alt="Fundlink Logo" class="h-8 w-auto">
                         <span class="font-black text-gray-900 text-sm tracking-tight uppercase">Fundlink</span>
                     </div>
                 </header>

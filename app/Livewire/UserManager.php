@@ -14,6 +14,7 @@ class UserManager extends Component
 
     public $search = '';
     public $isEditing = false;
+    public $selectedUser = null;
     public $userId;
     public $name;
     public $email;
@@ -37,6 +38,20 @@ class UserManager extends Component
         $this->resetPage();
     }
 
+    public function viewDetail($id)
+    {
+        $this->selectedUser = User::with('unit')->findOrFail($id);
+        $this->selectedUser->is_online = \Illuminate\Support\Facades\DB::table('sessions')
+            ->where('user_id', $id)
+            ->where('last_activity', '>=', now()->subMinutes(5)->getTimestamp())
+            ->exists();
+    }
+
+    public function closeDetail()
+    {
+        $this->selectedUser = null;
+    }
+
     public function create()
     {
         $this->reset(['userId', 'name', 'email', 'password', 'role', 'unit_id']);
@@ -51,6 +66,7 @@ class UserManager extends Component
         $this->email = $user->email;
         $this->role = $user->role;
         $this->unit_id = $user->unit_id;
+        $this->selectedUser = null;
         $this->isEditing = true;
     }
 
@@ -82,6 +98,7 @@ class UserManager extends Component
     public function delete($id)
     {
         User::find($id)->delete();
+        $this->selectedUser = null;
         session()->flash('message', 'Pengguna berhasil dihapus.');
     }
 
@@ -94,7 +111,8 @@ class UserManager extends Component
                       ->orWhere('email', 'like', '%' . $this->search . '%');
                 });
             })
-            ->latest()
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
             ->paginate(10);
 
         // Add online status to each user

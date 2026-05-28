@@ -17,7 +17,7 @@ class TransactionManager extends Component
     public $filterRange = 'Mingguan';
     public $filterFrequency = 'Minggu ke-1';
     public $isCreating = false;
-    
+
     public $unit_id;
     public $type = 'pemasukan';
     public $amount;
@@ -43,12 +43,77 @@ class TransactionManager extends Component
         if (!auth()->user()->isAdmin()) {
             $this->unit_id = auth()->user()->unit_id;
         }
+        // Set default frequency based on current date
+        $this->filterFrequency = 'Minggu ke-' . min(4, (int) ceil(now()->day / 7));
+    }
+
+    public function updatedFilterRange($value)
+    {
+        // Reset frequency to sensible default when range changes
+        if ($value === 'Mingguan') {
+            $this->filterFrequency = 'Minggu ke-' . (int) ceil(now()->day / 7);
+        } elseif ($value === 'Bulanan') {
+            $namaBulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+            $this->filterFrequency = $namaBulan[now()->month - 1] . ' ' . now()->year;
+        } elseif ($value === 'Tahunan') {
+            $this->filterFrequency = (string) now()->year;
+        }
+        $this->resetPage();
+    }
+
+    public function updatedFilterFrequency()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterUnit()
+    {
+        $this->resetPage();
+    }
+
+    private function applyFrequencyFilter($query)
+    {
+        if ($this->filterRange === 'Mingguan') {
+            // Minggu ke-1 = hari 1-7, ke-2 = 8-14, ke-3 = 15-21, ke-4 = 22-akhir bulan
+            $weekNum = (int) str_replace('Minggu ke-', '', $this->filterFrequency);
+            $startDay = ($weekNum - 1) * 7 + 1;
+            $endDay   = $weekNum === 4 ? 31 : $weekNum * 7;
+
+            // We filter by day-of-month within the current month
+            $year  = now()->year;
+            $month = now()->month;
+            $start = \Carbon\Carbon::createFromDate($year, $month, $startDay)->startOfDay();
+            $end   = \Carbon\Carbon::createFromDate($year, $month, min($endDay, now()->daysInMonth))->endOfDay();
+
+            $query->whereBetween('transaction_date', [$start, $end]);
+
+        } elseif ($this->filterRange === 'Bulanan') {
+            // filterFrequency = "Januari 2025", "Februari 2025", dst (Indonesian month names)
+            $bulanMap = [
+                'Januari' => 1, 'Februari' => 2, 'Maret' => 3, 'April' => 4,
+                'Mei' => 5, 'Juni' => 6, 'Juli' => 7, 'Agustus' => 8,
+                'September' => 9, 'Oktober' => 10, 'November' => 11, 'Desember' => 12,
+            ];
+            $parts = explode(' ', $this->filterFrequency);
+            $monthNum = $bulanMap[$parts[0]] ?? now()->month;
+            $year     = isset($parts[1]) ? (int) $parts[1] : now()->year;
+            $query->whereYear('transaction_date', $year)
+                  ->whereMonth('transaction_date', $monthNum);
+
+        } elseif ($this->filterRange === 'Tahunan') {
+            $year = (int) $this->filterFrequency;
+            if ($year > 0) {
+                $query->whereYear('transaction_date', $year);
+            }
+        }
+
+        return $query;
     }
 
     public function save()
     {
         $user = auth()->user();
-        
+
         $rules = [
             'unit_id' => 'required|exists:units,id',
             'type' => 'required|in:pemasukan,pengeluaran',
@@ -95,7 +160,7 @@ class TransactionManager extends Component
             $this->reset('unit_id');
         }
         $this->isCreating = false;
-        
+
         session()->flash('message', 'Transaksi berhasil disimpan.');
     }
 
@@ -110,11 +175,13 @@ class TransactionManager extends Component
             $query->where('unit_id', $this->filterUnit);
         }
 
-        $transactions = $query->latest('transaction_date')->get();
-        
+        $this->applyFrequencyFilter($query);
+
+        $transactions = $query->orderBy('transaction_date', 'desc')->orderBy('id', 'desc')->get();
+
         $total_pemasukan = $transactions->where('type', 'pemasukan')->sum('amount');
         $total_pengeluaran = $transactions->where('type', 'pengeluaran')->sum('amount');
-        
+
         $unit_name = $this->filterUnit ? Unit::find($this->filterUnit)->name : ($user->isAdmin() ? 'Semua Cabang' : $user->unit->name);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.transactions', [
@@ -142,8 +209,10 @@ class TransactionManager extends Component
             $query->where('unit_id', $this->filterUnit);
         }
 
+        $this->applyFrequencyFilter($query);
+
         return view('livewire.transaction-manager', [
-            'transactions' => $query->latest('transaction_date')->paginate(10),
+            'transactions' => $query->orderBy('transaction_date', 'desc')->orderBy('id', 'desc')->paginate(10),
             'units' => Unit::all(),
         ])->layout('layouts.app');
     }

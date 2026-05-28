@@ -12,6 +12,7 @@ class UnitManager extends Component
 
     public $search = '';
     public $isEditing = false;
+    public $selectedUnit = null;
     public $unitId;
     public $name;
     public $address;
@@ -31,6 +32,20 @@ class UnitManager extends Component
         $this->resetPage();
     }
 
+    public function viewDetail($id)
+    {
+        $unit = Unit::withCount('users')->findOrFail($id);
+        $pemasukan = $unit->transactions()->where('type', 'pemasukan')->sum('amount');
+        $pengeluaran = $unit->transactions()->where('type', 'pengeluaran')->sum('amount');
+        $unit->balance = $pemasukan - $pengeluaran;
+        $this->selectedUnit = $unit;
+    }
+
+    public function closeDetail()
+    {
+        $this->selectedUnit = null;
+    }
+
     public function create()
     {
         $this->reset(['unitId', 'name', 'address', 'google_maps_url', 'initial_balance', 'member_count_input']);
@@ -45,6 +60,7 @@ class UnitManager extends Component
         $this->address = $unit->address;
         $this->google_maps_url = $unit->google_maps_url;
         $this->initial_balance = 0; // Don't show initial balance on edit
+        $this->selectedUnit = null;
         $this->isEditing = true;
     }
 
@@ -85,6 +101,7 @@ class UnitManager extends Component
     public function delete($id)
     {
         Unit::find($id)->delete();
+        $this->selectedUnit = null;
         session()->flash('message', 'Unit berhasil dihapus.');
     }
 
@@ -95,7 +112,8 @@ class UnitManager extends Component
             ->when($this->search, function($query) {
                 $query->where('name', 'like', '%' . $this->search . '%');
             })
-            ->latest()
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
             ->paginate(10);
 
         // Add balance calculation to each unit

@@ -9,84 +9,157 @@
     @endif
 
     <!-- Header Section -->
-    <div class="mb-10">
+    <div class="mb-6">
         <h2 class="text-3xl font-black text-gray-900 tracking-tight">Riwayat Transaksi</h2>
-        <p class="text-gray-400 font-medium mt-1 text-sm">Catatan pemasukan/pengeluaran.</p>
+        <p class="text-gray-400 font-medium mt-1 text-lg">Catatan pemasukan/pengeluaran.</p>
     </div>
 
-    <!-- Filter Bar -->
-    <div class="flex flex-col md:flex-row items-end md:items-center justify-between mb-12 gap-6">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 w-full md:w-auto flex-1">
-            <div class="flex flex-col space-y-2">
-                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Rentang</label>
-                <div class="relative">
-                    <select wire:model.live="filterRange" class="w-full !appearance-none !bg-none bg-transparent border-none p-0 pr-8 text-sm font-bold text-gray-900 focus:ring-0 cursor-pointer" style="-webkit-appearance: none; -moz-appearance: none; background-image: none !important;">
-                        <option value="Mingguan">Mingguan</option>
-                        <option value="Bulanan">Bulanan</option>
-                        <option value="Harian">Harian</option>
-                    </select>
-                    <div class="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+    <!-- Sticky Filter & Actions Bar -->
+    <div class="sticky top-14 lg:top-0 z-20 bg-gray-50/80 backdrop-blur-md pt-4 pb-4 -mt-4 -mx-4 px-4 sm:-mx-8 sm:px-8 mb-8">
+        <div class="flex flex-col md:flex-row items-end md:items-center justify-between gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full md:w-auto flex-1">
+                <div class="flex flex-col space-y-2">
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Rentang</label>
+                    <div x-data="{ open: false }" @click.outside="open = false" class="relative">
+                        <!-- Trigger Button -->
+                        <button @click="open = !open" type="button" class="w-full flex items-center justify-between bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-sm text-sm font-bold text-gray-900 focus:outline-none cursor-pointer">
+                            <span>{{ $filterRange }}</span>
+                            <svg class="h-4 w-4 text-gray-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div x-show="open"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="absolute left-0 z-30 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl py-1 max-h-60 overflow-y-auto focus:outline-none"
+                             style="display: none;">
+
+                             <button @click="$wire.set('filterRange', 'Mingguan'); open = false;" type="button" class="w-full text-left px-4 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50 transition-colors">
+                                 Mingguan
+                             </button>
+                             <button @click="$wire.set('filterRange', 'Bulanan'); open = false;" type="button" class="w-full text-left px-4 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50 transition-colors">
+                                 Bulanan
+                             </button>
+                             <button @click="$wire.set('filterRange', 'Tahunan'); open = false;" type="button" class="w-full text-left px-4 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50 transition-colors">
+                                 Tahunan
+                             </button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="flex flex-col space-y-2">
-                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Frekuensi</label>
-                <div class="relative">
-                    <select wire:model.live="filterFrequency" class="w-full !appearance-none !bg-none bg-transparent border-none p-0 pr-8 text-sm font-bold text-gray-900 focus:ring-0 cursor-pointer" style="-webkit-appearance: none; -moz-appearance: none; background-image: none !important;">
-                        <option value="Minggu ke-1">Minggu ke-1</option>
-                        <option value="Minggu ke-2">Minggu ke-2</option>
-                        <option value="Minggu ke-3">Minggu ke-3</option>
-                        <option value="Minggu ke-4">Minggu ke-4</option>
-                    </select>
-                    <div class="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                <div class="flex flex-col space-y-2">
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Frekuensi</label>
+                    <div x-data="{ open: false }" @click.outside="open = false" class="relative">
+                        <!-- Trigger Button -->
+                        <button @click="open = !open" type="button" class="w-full flex items-center justify-between bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-sm text-sm font-bold text-gray-900 focus:outline-none cursor-pointer">
+                            <span>{{ $filterFrequency }}</span>
+                            <svg class="h-4 w-4 text-gray-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div x-show="open"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="absolute left-0 z-30 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl py-1 max-h-60 overflow-y-auto focus:outline-none"
+                             style="display: none;">
+
+                             @if($filterRange === 'Mingguan')
+                                 @foreach(['Minggu ke-1', 'Minggu ke-2', 'Minggu ke-3', 'Minggu ke-4'] as $opt)
+                                     <button @click="$wire.set('filterFrequency', '{{ $opt }}'); open = false;" type="button" class="w-full text-left px-4 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50 transition-colors">
+                                         {{ $opt }}
+                                     </button>
+                                 @endforeach
+                             @elseif($filterRange === 'Bulanan')
+                                 @php
+                                     $namaBulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+                                 @endphp
+                                 @foreach($namaBulan as $bulan)
+                                     @php $opt = $bulan . ' ' . now()->year; @endphp
+                                     <button @click="$wire.set('filterFrequency', '{{ $opt }}'); open = false;" type="button" class="w-full text-left px-4 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50 transition-colors">
+                                         {{ $opt }}
+                                     </button>
+                                 @endforeach
+                             @elseif($filterRange === 'Tahunan')
+                                 @php
+                                     $years = range(now()->year, now()->year - 4);
+                                 @endphp
+                                 @foreach($years as $opt)
+                                     <button @click="$wire.set('filterFrequency', '{{ $opt }}'); open = false;" type="button" class="w-full text-left px-4 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50 transition-colors">
+                                         {{ $opt }}
+                                     </button>
+                                 @endforeach
+                             @endif
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            @if(auth()->user()->isAdmin())
-            <div class="flex flex-col space-y-2">
-                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cabang</label>
-                <div class="relative">
-                    <select wire:model.live="filterUnit" class="w-full !appearance-none !bg-none bg-transparent border-none p-0 pr-8 text-sm font-bold text-gray-900 focus:ring-0 cursor-pointer" style="-webkit-appearance: none; -moz-appearance: none; background-image: none !important;">
-                        <option value="">Pilih Cabang</option>
-                        @foreach($units as $unit)
-                            <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                        @endforeach
-                    </select>
-                    <div class="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                @if(auth()->user()->isAdmin())
+                <div class="flex flex-col space-y-2">
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cabang</label>
+                    <div x-data="{ open: false }" @click.outside="open = false" class="relative">
+                        <!-- Trigger Button -->
+                        <button @click="open = !open" type="button" class="w-full flex items-center justify-between bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-sm text-sm font-bold text-gray-900 focus:outline-none cursor-pointer">
+                            <span>{{ $units->firstWhere('id', $filterUnit)->name ?? 'Pilih Cabang' }}</span>
+                            <svg class="h-4 w-4 text-gray-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div x-show="open"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="absolute left-0 z-30 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl py-1 max-h-60 overflow-y-auto focus:outline-none"
+                             style="display: none;">
+
+                             <button @click="$wire.set('filterUnit', ''); open = false;" type="button" class="w-full text-left px-4 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50 transition-colors">
+                                 Pilih Cabang
+                             </button>
+                             @foreach($units as $unit)
+                                 <button @click="$wire.set('filterUnit', '{{ $unit->id }}'); open = false;" type="button" class="w-full text-left px-4 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50 transition-colors">
+                                     {{ $unit->name }}
+                                 </button>
+                             @endforeach
+                        </div>
                     </div>
                 </div>
+                @endif
             </div>
-            @endif
-        </div>
 
-        <div class="flex items-center space-x-3 w-full md:w-auto justify-end">
-            <button wire:click="exportPdf" wire:loading.attr="disabled" class="flex items-center space-x-2 px-4 py-2 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50">
-                <svg wire:loading.remove wire:target="exportPdf" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <svg wire:loading wire:target="exportPdf" class="animate-spin h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span class="text-xs font-bold">{{ __('Ekspor') }}</span>
-            </button>
-            <button wire:click="$toggle('isCreating')" class="flex items-center space-x-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all duration-300">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                <span class="text-xs font-black">{{ $isCreating ? 'Batal' : 'Input' }}</span>
-            </button>
+            <div class="flex items-center space-x-3 w-full md:w-auto justify-end">
+                <button wire:click="exportPdf" wire:loading.attr="disabled" class="flex items-center space-x-2 px-4 py-2 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50">
+                    <svg wire:loading.remove wire:target="exportPdf" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <svg wire:loading wire:target="exportPdf" class="animate-spin h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="text-xs font-bold">{{ __('Ekspor') }}</span>
+                </button>
+                <button wire:click="$toggle('isCreating')" class="flex items-center space-x-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all duration-300">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span class="text-xs font-black">{{ $isCreating ? 'Batal' : 'Input' }}</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -125,11 +198,11 @@
                 @else
                 <!-- Type Tabs -->
                 <div class="flex mb-6 rounded-2xl bg-gray-50 p-1 h-12">
-                    <button type="button" wire:click="$set('type', 'pemasukan')" 
+                    <button type="button" wire:click="$set('type', 'pemasukan')"
                         class="flex-1 text-xs font-black transition-all duration-300 rounded-xl {{ $type === 'pemasukan' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'text-gray-400 hover:text-gray-500' }}">
                         Pemasukan
                     </button>
-                    <button type="button" wire:click="$set('type', 'pengeluaran')" 
+                    <button type="button" wire:click="$set('type', 'pengeluaran')"
                         class="flex-1 text-xs font-black transition-all duration-300 rounded-xl {{ $type === 'pengeluaran' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'text-gray-400 hover:text-gray-500' }}">
                         Pengeluaran
                     </button>
@@ -198,7 +271,7 @@
                     <div class="flex flex-col items-center justify-center pt-4 space-y-2">
                         <label class="cursor-pointer group flex flex-col items-center space-y-2 relative">
                             <input type="file" wire:model="attachment" accept="image/*" class="hidden">
-                            
+
                             <!-- Loading State -->
                             <div wire:loading wire:target="attachment" class="absolute inset-0 bg-white/80 flex items-center justify-center rounded-2xl z-10 backdrop-blur-sm">
                                 <svg class="animate-spin h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24">
@@ -249,15 +322,15 @@
 
     @if($selectedTransaction)
         <!-- Balanced Transaction Detail View Design -->
-        <div class="fixed inset-0 z-[60] overflow-y-auto no-scrollbar bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
-            <div class="min-h-screen flex items-center justify-center p-4">
-                <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl relative border border-gray-100 overflow-hidden max-h-[90vh] overflow-y-auto no-scrollbar">
+        <div class="fixed inset-0 z-[60] overflow-hidden pointer-events-none bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
+            <div class="min-h-screen flex items-center justify-center p-4 pointer-events-none">
+                <div class="pointer-events-auto bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl relative border border-gray-100 overflow-hidden max-h-[90vh] overflow-y-auto no-scrollbar">
                     <div class="p-8">
                         <!-- Header: Icon & Category -->
                         <div class="flex items-center justify-between mb-8">
                             <div class="flex items-center space-x-4">
                                 <div class="p-3 rounded-2xl {{ $selectedTransaction->type === 'pemasukan' ? 'bg-blue-50 text-blue-600' : 'bg-rose-50 text-rose-600' }} shadow-inner shrink-0">
-                                    <img src="{{ asset($selectedTransaction->type === 'pemasukan' ? 'images/pemasukan.png' : 'images/Pengeluaran.png') }}" class="h-6 w-6 object-contain" alt="{{ $selectedTransaction->type }}">
+                                    <img src="{{ asset($selectedTransaction->type === 'pemasukan' ? 'images/pemasukan.svg' : 'images/Pengeluaran.svg') }}" class="h-6 w-6 object-contain" alt="{{ $selectedTransaction->type }}">
                                 </div>
                                 <div>
                                     <h2 class="text-xl font-black text-gray-900 tracking-tight">{{ $selectedTransaction->category }}</h2>
@@ -345,8 +418,8 @@
             <div wire:click="viewDetail({{ $transaction->id }})" class="group cursor-pointer bg-white p-5 sm:p-6 rounded-3xl border border-transparent hover:border-gray-100 hover:shadow-2xl hover:shadow-gray-100/50 transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="flex items-center space-x-4 sm:space-x-6">
                     <!-- Icon Indicator -->
-                    <div class="p-3 sm:p-4 rounded-2xl {{ $transaction->type === 'pemasukan' ? 'bg-blue-50 text-blue-600' : 'bg-rose-50 text-rose-600' }}">
-                        <img src="{{ asset($transaction->type === 'pemasukan' ? 'images/pemasukan.png' : 'images/Pengeluaran.png') }}" class="h-6 w-6 sm:h-8 sm:w-8 object-contain" alt="{{ $transaction->type }}">
+                    <div class="p-3 sm:p-4 rounded-2xl {{ $transaction->type === 'pemasukan' ? 'bg-blue-50 group-hover:bg-blue-600' : 'bg-rose-50 group-hover:bg-rose-500' }} group-hover:scale-110 transition-all duration-300">
+                        <img src="{{ asset($transaction->type === 'pemasukan' ? 'images/pemasukan.svg' : 'images/Pengeluaran.svg') }}" class="h-6 w-6 sm:h-8 sm:w-8 object-contain transition-all duration-300 group-hover:brightness-0 group-hover:invert" alt="{{ $transaction->type }}">
                     </div>
 
                     <!-- Details -->
