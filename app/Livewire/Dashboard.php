@@ -271,6 +271,7 @@ class Dashboard extends Component
             'expensePercentage'  => $this->getExpensePercentage(),
             'chartTitle'         => $this->getChartTitle(),
             'units'              => \App\Models\Unit::all(),
+            'hasUnreadNotif'     => auth()->user()->notifications()->where('is_read', false)->exists(),
         ])->layout('layouts.app');
     }
 }

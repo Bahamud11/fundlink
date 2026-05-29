@@ -9,10 +9,7 @@
 
             <!-- Notification Bell -->
             <a href="{{ route('notifications') }}" class="relative p-2 text-gray-400 hover:text-blue-600 transition-colors duration-200 mt-2">
-                @if(auth()->user()->notifications()->where('is_read', false)->exists())
-                    <span class="absolute top-2 right-2 h-2.5 w-2.5 bg-red-500 rounded-full border-2 border-white"></span>
-                @endif
-                <img src="{{ asset('images/lonceng.svg') }}" class="h-7 w-7 object-contain" alt="Notifikasi">
+                <img src="{{ asset($hasUnreadNotif ? 'images/notifred.svg' : 'images/notif.svg') }}" class="h-7 w-7 object-contain" alt="Notifikasi">
             </a>
         </div>
     </div>
