@@ -26,8 +26,6 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-interaction --no-progress
 
-
-
       - name: Remove unnecessary directories
         run: |
           # Remove all hidden directories except .git
@@ -57,24 +55,24 @@ jobs:
           server-dir: ${{ secrets.FTP_REMOTE_PATH }}
           state-name: .ftp-deploy-sync-state.json
           dangerous-clean-slate: false
+          timeout: 300000
           exclude: |
-            .git
-            .github
-            .agents
-            .gemini
-            .claude
-            .vscode
-            node_modules
-            vendor
-            tests
-            storage/logs
-            bootstrap/cache
-            database/seeders
-
+            .git/**
+            .github/**
+            .agents/**
+            .gemini/**
+            .claude/**
+            .vscode/**
+            node_modules/**
+            vendor/**
+            tests/**
+            storage/logs/**
+            bootstrap/cache/**
+            database/seeders/**
 
       - name: Wait before retry
         if: steps.deploy_attempt_1.outcome != 'success'
-        run: sleep 10
+        run: sleep 30
 
       - name: Deploy to FTP (Attempt 2)
         if: steps.deploy_attempt_1.outcome != 'success'
@@ -88,24 +86,24 @@ jobs:
           server-dir: ${{ secrets.FTP_REMOTE_PATH }}
           state-name: .ftp-deploy-sync-state.json
           dangerous-clean-slate: false
+          timeout: 300000
           exclude: |
-            .git
-            .github
-            .agents
-            .gemini
-            .claude
-            .vscode
-            node_modules
-            vendor
-            tests
-            storage/logs
-            bootstrap/cache
-            database/seeders
-
+            .git/**
+            .github/**
+            .agents/**
+            .gemini/**
+            .claude/**
+            .vscode/**
+            node_modules/**
+            vendor/**
+            tests/**
+            storage/logs/**
+            bootstrap/cache/**
+            database/seeders/**
 
       - name: Wait before final retry
         if: steps.deploy_attempt_2.outcome != 'success'
-        run: sleep 15
+        run: sleep 60
 
       - name: Deploy to FTP (Attempt 3)
         if: steps.deploy_attempt_2.outcome != 'success'
@@ -117,20 +115,20 @@ jobs:
           server-dir: ${{ secrets.FTP_REMOTE_PATH }}
           state-name: .ftp-deploy-sync-state.json
           dangerous-clean-slate: false
+          timeout: 300000
           exclude: |
-            .git
-            .github
-            .agents
-            .gemini
-            .claude
-            .vscode
-            node_modules
-            vendor
-            tests
-            storage/logs
-            bootstrap/cache
-            database/seeders
-
+            .git/**
+            .github/**
+            .agents/**
+            .gemini/**
+            .claude/**
+            .vscode/**
+            node_modules/**
+            vendor/**
+            tests/**
+            storage/logs/**
+            bootstrap/cache/**
+            database/seeders/**
 
       - name: Deployment completed
         run: echo "✓ Successfully deployed to FTP server"
