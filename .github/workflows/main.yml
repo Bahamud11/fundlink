@@ -48,8 +48,10 @@ jobs:
         uses: shimataro/ssh-key-action@v2
         with:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          # Bypass verifikasi host sementara untuk otomatisasi
           known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
+
+      - name: 📦 Install Rsync
+        run: sudo apt-get update && sudo apt-get install -y rsync
 
       - name: 🚀 Deploy via Rsync
         run: |
