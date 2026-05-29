@@ -1,4 +1,4 @@
-name: Deploy to DirectAdmin via Rsync
+name: Deploy to DirectAdmin via SCP
 
 on:
   push:
@@ -26,55 +26,40 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-interaction --no-progress
 
-      - name: Remove unnecessary directories
+      - name: 🧹 Clean and Prepare Files for SCP
         run: |
-          # Remove all hidden directories except .git
-          find . -maxdepth 1 -type d -name ".*" ! -name "." ! -name ".git" -exec rm -rf {} + 2>/dev/null || true
-          # Remove large directories
-          rm -rf vendor node_modules tests storage/logs bootstrap/cache database/seeders
-          # Create empty dirs for storage and bootstrap
-          mkdir -p storage/logs bootstrap/cache
-          # Remove all markdown files, config files, and lock files
+          # 1. Hapus direktori bawaan yang besar dan tidak perlu di server
+          rm -rf vendor node_modules tests database/seeders
+
+          # 2. Hapus direktori hidden bawaan editor/AI/Git
+          rm -rf .git .github .vscode .gemini .claude .agents
+          
+          # 3. Hapus file konfigurasi dan source code yang tidak diperlukan di production
           rm -f *.md .env.example phpunit.xml package-lock.json composer.lock vite.config.js tailwind.config.js
-          # Remove any node-related files
-          rm -f package.json npm-shrinkwrap.json yarn.lock
-          # Remove composer files
-          rm -f composer.json
+          rm -f package.json npm-shrinkwrap.json yarn.lock composer.json
+
+          # 4. Pastikan direktori kosong tersedia untuk framework (tanpa menimpa isi di server)
+          # SCP akan membuat folder ini jika belum ada, atau sekadar melewatinya jika sudah ada tanpa menghapus file di dalamnya.
+          mkdir -p storage/logs bootstrap/cache
+          
           echo "✓ Cleaned up directories"
           echo "Size before deploy:"
           du -sh . 2>/dev/null || echo "Size: unknown"
 
-      - name: 🔑 Install SSH Key
-        uses: shimataro/ssh-key-action@v2
+      - name: 🚀 Deploy via SCP
+        uses: appleboy/scp-action@master
         with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
-
-      - name: 📦 Install Rsync
-        run: sudo apt-get update && sudo apt-get install -y rsync
-
-      - name: 🚀 Deploy via Rsync
-        run: |
-          rsync -avz --delete \
-          -e "ssh -o StrictHostKeyChecking=no" \
-          --exclude='.git/' \
-          --exclude='.github/' \
-          --exclude='.agents/' \
-          --exclude='.gemini/' \
-          --exclude='.claude/' \
-          --exclude='.vscode/' \
-          --exclude='node_modules/' \
-          --exclude='vendor/' \
-          --exclude='tests/' \
-          --exclude='bootstrap/cache/' \
-          --exclude='database/seeders/' \
-          --exclude='.env' \
-          --exclude='storage/' \
-          --exclude='public/storage/' \
-          --exclude='public/images/' \
-          --exclude='.well-known/' \
-          --exclude='database/*.sqlite' \
-          ./ ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/domains/bahamud.my.id/public_html/
+          # Kita mengirim semua sisa file/folder di current directory (.)
+          source: "."
+          # Target disesuaikan dengan path DirectAdmin
+          target: "/domains/bahamud.my.id/public_html/"
+          # Strip components mengatur level folder; 0 berarti copy isi folder saat ini apa adanya.
+          strip_components: 0
+          # Opsional: Jika server butuh port SSH custom (default 22, kadang 2222)
+          # port: 22 
 
       - name: Deployment completed
-        run: echo "✓ Successfully deployed to server via Rsync"
+        run: echo "✓ Successfully deployed to server via SCP"
