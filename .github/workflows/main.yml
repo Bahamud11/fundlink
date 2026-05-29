@@ -1,4 +1,4 @@
-name: Deploy to FTP
+name: Deploy to DirectAdmin via Rsync
 
 on:
   push:
@@ -44,91 +44,35 @@ jobs:
           echo "Size before deploy:"
           du -sh . 2>/dev/null || echo "Size: unknown"
 
-      - name: Deploy to FTP (Attempt 1)
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        continue-on-error: true
-        id: deploy_attempt_1
+      - name: 🔑 Install SSH Key
+        uses: shimataro/ssh-key-action@v2
         with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: ${{ secrets.FTP_REMOTE_PATH }}
-          state-name: .ftp-deploy-sync-state.json
-          dangerous-clean-slate: false
-          timeout: 300000
-          exclude: |
-            .git/**
-            .github/**
-            .agents/**
-            .gemini/**
-            .claude/**
-            .vscode/**
-            node_modules/**
-            vendor/**
-            tests/**
-            storage/logs/**
-            bootstrap/cache/**
-            database/seeders/**
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          # Bypass verifikasi host sementara untuk otomatisasi
+          known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
 
-      - name: Wait before retry
-        if: steps.deploy_attempt_1.outcome != 'success'
-        run: sleep 30
-
-      - name: Deploy to FTP (Attempt 2)
-        if: steps.deploy_attempt_1.outcome != 'success'
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        continue-on-error: true
-        id: deploy_attempt_2
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: ${{ secrets.FTP_REMOTE_PATH }}
-          state-name: .ftp-deploy-sync-state.json
-          dangerous-clean-slate: false
-          timeout: 300000
-          exclude: |
-            .git/**
-            .github/**
-            .agents/**
-            .gemini/**
-            .claude/**
-            .vscode/**
-            node_modules/**
-            vendor/**
-            tests/**
-            storage/logs/**
-            bootstrap/cache/**
-            database/seeders/**
-
-      - name: Wait before final retry
-        if: steps.deploy_attempt_2.outcome != 'success'
-        run: sleep 60
-
-      - name: Deploy to FTP (Attempt 3)
-        if: steps.deploy_attempt_2.outcome != 'success'
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: ${{ secrets.FTP_REMOTE_PATH }}
-          state-name: .ftp-deploy-sync-state.json
-          dangerous-clean-slate: false
-          timeout: 300000
-          exclude: |
-            .git/**
-            .github/**
-            .agents/**
-            .gemini/**
-            .claude/**
-            .vscode/**
-            node_modules/**
-            vendor/**
-            tests/**
-            storage/logs/**
-            bootstrap/cache/**
-            database/seeders/**
+      - name: 🚀 Deploy via Rsync
+        run: |
+          rsync -avz --delete \
+          -e "ssh -o StrictHostKeyChecking=no" \
+          --exclude='.git/' \
+          --exclude='.github/' \
+          --exclude='.agents/' \
+          --exclude='.gemini/' \
+          --exclude='.claude/' \
+          --exclude='.vscode/' \
+          --exclude='node_modules/' \
+          --exclude='vendor/' \
+          --exclude='tests/' \
+          --exclude='bootstrap/cache/' \
+          --exclude='database/seeders/' \
+          --exclude='.env' \
+          --exclude='storage/' \
+          --exclude='public/storage/' \
+          --exclude='public/images/' \
+          --exclude='.well-known/' \
+          --exclude='database/*.sqlite' \
+          ./ ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/domains/bahamud.my.id/public_html/
 
       - name: Deployment completed
-        run: echo "✓ Successfully deployed to FTP server"
+        run: echo "✓ Successfully deployed to server via Rsync"
