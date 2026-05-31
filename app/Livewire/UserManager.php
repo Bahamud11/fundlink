@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Unit;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -12,72 +13,78 @@ class UserManager extends Component
 {
     use WithPagination;
 
-    public $search = '';
-    public $isEditing = false;
-    public $selectedUser = null;
-    public $userId;
-    public $name;
-    public $email;
-    public $password;
-    public $role = 'user';
-    public $unit_id;
+    // ─── State ────────────────────────────────────────────────────────────────
+    public string  $search       = '';
+    public bool    $isEditing    = false;
+    public ?User   $selectedUser = null;
+    public ?int    $userId       = null;
+    public string  $name         = '';
+    public string  $email        = '';
+    public string  $password     = '';
+    public string  $role         = 'user';
+    public ?int    $unit_id      = null;
 
-    protected function rules()
+    protected function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $this->userId,
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|max:255|unique:users,email,' . $this->userId,
             'password' => $this->userId ? 'nullable|min:8' : 'required|min:8',
-            'role' => 'required|in:admin,user',
-            'unit_id' => 'required_if:role,user|nullable|exists:units,id',
+            'role'     => 'required|in:admin,user',
+            'unit_id'  => 'required_if:role,user|nullable|exists:units,id',
         ];
     }
 
-    public function updatingSearch()
+    // ─── Search ───────────────────────────────────────────────────────────────
+
+    public function updatingSearch(): void
     {
         $this->resetPage();
     }
 
-    public function viewDetail($id)
+    // ─── Detail Panel ─────────────────────────────────────────────────────────
+
+    public function viewDetail(int $id): void
     {
-        $this->selectedUser = User::with('unit')->findOrFail($id);
-        $this->selectedUser->is_online = \Illuminate\Support\Facades\DB::table('sessions')
-            ->where('user_id', $id)
-            ->where('last_activity', '>=', now()->subMinutes(5)->getTimestamp())
-            ->exists();
+        $user            = User::with('unit')->findOrFail($id);
+        $user->is_online = $this->isOnline($id);
+        $this->selectedUser = $user;
     }
 
-    public function closeDetail()
+    public function closeDetail(): void
     {
         $this->selectedUser = null;
     }
 
-    public function create()
+    // ─── CRUD ─────────────────────────────────────────────────────────────────
+
+    public function create(): void
     {
-        $this->reset(['userId', 'name', 'email', 'password', 'role', 'unit_id']);
+        $this->resetForm();
         $this->isEditing = true;
     }
 
-    public function edit($id)
+    public function edit(int $id): void
     {
-        $user = User::findOrFail($id);
-        $this->userId = $user->id;
-        $this->name = $user->name;
-        $this->email = $user->email;
-        $this->role = $user->role;
-        $this->unit_id = $user->unit_id;
+        $user           = User::findOrFail($id);
+        $this->userId   = $user->id;
+        $this->name     = $user->name;
+        $this->email    = $user->email;
+        $this->role     = $user->role;
+        $this->unit_id  = $user->unit_id;
+        $this->password = '';
         $this->selectedUser = null;
-        $this->isEditing = true;
+        $this->isEditing    = true;
     }
 
-    public function save()
+    public function save(): void
     {
         $this->validate();
 
         $data = [
-            'name' => $this->name,
-            'email' => $this->email,
-            'role' => $this->role,
+            'name'    => $this->name,
+            'email'   => $this->email,
+            'role'    => $this->role,
             'unit_id' => $this->role === 'admin' ? null : $this->unit_id,
         ];
 
@@ -86,47 +93,74 @@ class UserManager extends Component
         }
 
         if ($this->userId) {
-            User::find($this->userId)->update($data);
+            User::findOrFail($this->userId)->update($data);
         } else {
             User::create($data);
         }
 
         $this->isEditing = false;
-        session()->flash('message', 'Pengguna berhasil disimpan.');
+        $this->resetForm();
+        $this->dispatch('swal-success', message: 'Pengguna berhasil disimpan.');
     }
 
-    public function delete($id)
+    public function delete(int $id): void
     {
-        User::find($id)->delete();
+        // Cegah hapus diri sendiri
+        abort_if($id === auth()->id(), 403, 'Tidak dapat menghapus akun sendiri.');
+
+        User::findOrFail($id)->delete();
         $this->selectedUser = null;
-        session()->flash('message', 'Pengguna berhasil dihapus.');
+        $this->dispatch('swal-success', message: 'Pengguna berhasil dihapus.');
     }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    private function resetForm(): void
+    {
+        $this->userId   = null;
+        $this->name     = '';
+        $this->email    = '';
+        $this->password = '';
+        $this->role     = 'user';
+        $this->unit_id  = null;
+    }
+
+    private function isOnline(int $userId): bool
+    {
+        return DB::table('sessions')
+            ->where('user_id', $userId)
+            ->where('last_activity', '>=', now()->subMinutes(5)->getTimestamp())
+            ->exists();
+    }
+
+    // ─── Render ───────────────────────────────────────────────────────────────
 
     public function render()
     {
         $users = User::with('unit')
-            ->when($this->search, function($query) {
-                $query->where(function($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('email', 'like', '%' . $this->search . '%');
-                });
-            })
+            ->when($this->search, fn ($q) => $q->where(fn ($q2) =>
+                $q2->where('name', 'like', '%' . $this->search . '%')
+                   ->orWhere('email', 'like', '%' . $this->search . '%')
+            ))
             ->orderBy('created_at', 'desc')
             ->orderBy('id', 'desc')
             ->paginate(10);
 
-        // Add online status to each user
-        $users->getCollection()->transform(function($user) {
-            $user->is_online = \Illuminate\Support\Facades\DB::table('sessions')
-                ->where('user_id', $user->id)
-                ->where('last_activity', '>=', now()->subMinutes(5)->getTimestamp())
-                ->exists();
+        // Ambil semua user_id aktif dalam satu query (hindari N+1)
+        $onlineIds = DB::table('sessions')
+            ->whereNotNull('user_id')
+            ->where('last_activity', '>=', now()->subMinutes(5)->getTimestamp())
+            ->pluck('user_id')
+            ->flip();
+
+        $users->getCollection()->transform(function (User $user) use ($onlineIds) {
+            $user->is_online = $onlineIds->has($user->id);
             return $user;
         });
 
         return view('livewire.user-manager', [
             'users' => $users,
-            'units' => Unit::all(),
+            'units' => Unit::orderBy('name')->get(),
         ])->layout('layouts.app');
     }
 }

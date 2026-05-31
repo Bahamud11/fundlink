@@ -10,15 +10,19 @@ class NotificationManager extends Component
 {
     use WithPagination;
 
-    public function markAsRead($id)
+    public function markAsRead(int $id): void
     {
-        $notification = Notification::where('user_id', auth()->id())->findOrFail($id);
-        $notification->update(['is_read' => true]);
+        // Pastikan notifikasi milik user yang sedang login
+        Notification::where('user_id', auth()->id())
+            ->findOrFail($id)
+            ->update(['is_read' => true]);
     }
 
-    public function markAllAsRead()
+    public function markAllAsRead(): void
     {
-        Notification::where('user_id', auth()->id())->where('is_read', false)->update(['is_read' => true]);
+        Notification::where('user_id', auth()->id())
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
     }
 
     public function render()
@@ -27,8 +31,7 @@ class NotificationManager extends Component
             ->latest()
             ->paginate(15);
 
-        return view('livewire.notification-manager', [
-            'notifications' => $notifications
-        ])->layout('layouts.app');
+        return view('livewire.notification-manager', compact('notifications'))
+            ->layout('layouts.app');
     }
 }

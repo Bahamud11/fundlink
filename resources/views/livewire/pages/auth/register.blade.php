@@ -21,18 +21,24 @@ new #[Layout('layouts.guest')] class extends Component
     public function register(): void
     {
         $validated = $this->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'string', Rules\Password::defaults()],
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
 
-        event(new Registered($user = User::create($validated)));
+        $user = User::create($validated);
+
+        event(new Registered($user));
 
         Auth::login($user);
 
-        $this->redirect(route('dashboard', absolute: false), navigate: true);
+        // Tandai session bahwa user ini perlu verifikasi OTP
+        // OTP akan di-generate & dikirim otomatis di OtpVerification::mount()
+        session(['otp_pending' => true]);
+
+        $this->redirect(route('otp.verify', absolute: false), navigate: true);
     }
 }; ?>
 

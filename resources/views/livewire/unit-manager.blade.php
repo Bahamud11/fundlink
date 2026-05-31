@@ -1,13 +1,4 @@
 <div>
-    @if (session()->has('message'))
-        <div class="mb-8 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center space-x-3 text-emerald-600 animate-in fade-in slide-in-from-top-4 duration-300">
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            <span class="text-xs font-black uppercase tracking-wider">{{ session('message') }}</span>
-        </div>
-    @endif
-
     <!-- Header Section -->
     <div class="mb-6">
         <h2 class="text-3xl font-black text-gray-900 tracking-tight">Daftar Unit</h2>
@@ -41,13 +32,6 @@
                         @error('name') <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider">{{ $message }}</span> @enderror
                     </div>
 
-                    <!-- Jumlah Anggota -->
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Jumlah Anggota</label>
-                        <div class="border-b border-gray-100 focus-within:border-blue-600 transition-colors pb-2">
-                            <input type="number" wire:model="member_count_input" class="w-full text-sm font-bold text-gray-800 bg-transparent border-none focus:ring-0 p-0 placeholder-gray-300" placeholder="Masukkan jumlah anggota...">
-                        </div>
-                    </div>
 
                     <!-- Lokasi -->
                     <div class="space-y-1">
@@ -68,6 +52,19 @@
                             </div>
                         </div>
                         @error('address') <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider">{{ $message }}</span> @enderror
+                    </div>
+
+                    <!-- Google Maps URL -->
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Link Google Maps</label>
+                        <div class="flex items-center space-x-2 border-b border-gray-100 focus-within:border-blue-600 transition-colors pb-2">
+                            <svg class="h-4 w-4 text-gray-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <input type="url" wire:model="google_maps_url" class="w-full text-sm font-bold text-gray-800 bg-transparent border-none focus:ring-0 p-0 placeholder-gray-300" placeholder="https://maps.google.com/...">
+                        </div>
+                        @error('google_maps_url') <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider">{{ $message }}</span> @enderror
                     </div>
 
                     <!-- Dana Awal -->
@@ -151,8 +148,10 @@
     </div>
 
     @if($selectedUnit)
-        <div class="fixed inset-0 z-[60] overflow-hidden pointer-events-none bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
-            <div class="min-h-screen flex items-center justify-center p-4 pointer-events-none">
+        <div class="fixed inset-0 z-[60] overflow-hidden bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
+            <!-- Backdrop: klik untuk tutup -->
+            <div class="absolute inset-0" wire:click="closeDetail"></div>
+            <div class="relative min-h-screen flex items-center justify-center p-4 pointer-events-none">
                 <div class="pointer-events-auto bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl relative border border-gray-100 overflow-hidden max-h-[90vh] overflow-y-auto no-scrollbar">
                     <div class="p-8 text-left">
                         <!-- Header -->
@@ -211,7 +210,26 @@
                                 </svg>
                                 <span>Edit</span>
                             </button>
-                            <button onclick="confirm('Hapus unit ini?') || event.stopImmediatePropagation()" wire:click="delete({{ $selectedUnit->id }})" class="flex-1 flex items-center justify-center space-x-2 py-4 bg-rose-50 text-rose-600 rounded-2xl text-xs font-black hover:bg-rose-100 hover:scale-[1.01] active:scale-95 transition-all duration-300 uppercase tracking-[0.2em]">
+                            <button
+                                @click="Swal.fire({
+                                    title: 'Hapus Unit?',
+                                    text: 'Data unit beserta seluruh transaksinya akan dihapus permanen.',
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#2563eb',
+                                    cancelButtonColor: '#e5e7eb',
+                                    confirmButtonText: 'Ya, Hapus',
+                                    cancelButtonText: 'Batal',
+                                    customClass: {
+                                        cancelButton: '!text-gray-700',
+                                        popup: '!rounded-3xl !shadow-2xl',
+                                        title: '!font-black !text-gray-900 !text-xl',
+                                        htmlContainer: '!text-gray-400 !text-sm',
+                                        confirmButton: '!rounded-xl !font-black !text-xs !uppercase !tracking-widest !px-6 !py-3',
+                                        cancelButton: '!rounded-xl !font-black !text-xs !uppercase !tracking-widest !px-6 !py-3',
+                                    }
+                                }).then(r => r.isConfirmed && $wire.delete({{ $selectedUnit->id }}))"
+                                class="flex-1 flex items-center justify-center space-x-2 py-4 bg-rose-50 text-rose-600 rounded-2xl text-xs font-black hover:bg-rose-100 hover:scale-[1.01] active:scale-95 transition-all duration-300 uppercase tracking-[0.2em]">
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>

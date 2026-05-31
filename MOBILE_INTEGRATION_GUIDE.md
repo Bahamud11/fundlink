@@ -1,462 +1,745 @@
-# Fundlink Mobile App Integration Guide
+# Fundlink Mobile Integration Guide (Flutter)
 
-## Authentication Flow Implementation
+**Stack**: Flutter + Dart  
+**Auth**: Laravel Sanctum Bearer Token  
+**Base URL**: `https://bahamud.my.id/api`
 
-### 1. Token Management Class
+---
+
+## Setup
+
+### pubspec.yaml dependencies
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.0
+  shared_preferences: ^2.2.0
+  flutter_secure_storage: ^9.0.0
+  image_picker: ^1.0.7
+  intl: ^0.19.0
+```
+
+---
+
+## 1. Konfigurasi & Konstanta
 
 ```dart
-// Flutter/Dart
-class AuthService {
-  static const String _tokenKey = 'auth_token';
-  static const String _userKey = 'user_data';
+// lib/core/config.dart
+class AppConfig {
+  static const String _prodUrl = 'https://bahamud.my.id/api';
+  static const String _devUrl  = 'http://10.0.2.2:8000/api'; // Android emulator
+  // static const String _devUrl = 'http://127.0.0.1:8000/api'; // iOS simulator
 
-  // Save token securely
-  Future<void> saveToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
-  }
+  static const bool isProduction = bool.fromEnvironment('dart.vm.product');
 
-  // Get stored token
-  Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
-  }
-
-  // Save user data
-  Future<void> saveUser(Map<String, dynamic> user) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_userKey, jsonEncode(user));
-  }
-
-  // Get stored user
-  Future<Map<String, dynamic>?> getUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString(_userKey);
-    return userJson != null ? jsonDecode(userJson) : null;
-  }
-
-  // Clear all auth data
-  Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-    await prefs.remove(_userKey);
-  }
-
-  // Check if user is authenticated
-  Future<bool> isAuthenticated() async {
-    final token = await getToken();
-    return token != null && token.isNotEmpty;
-  }
+  static String get baseUrl => isProduction ? _prodUrl : _devUrl;
 }
 ```
 
-### 2. HTTP Client with Automatic Token Handling
+---
+
+## 2. Model Classes
 
 ```dart
-class ApiClient {
-  static const String baseUrl = 'https://bahamud.my.id/api';
-  final AuthService _authService = AuthService();
+// lib/models/user_model.dart
+class UserModel {
+  final int id;
+  final String name;
+  final String email;
+  final String role;
+  final int? unitId;
+  final UnitModel? unit;
+  final String? profilePhotoUrl;
 
-  // Generic GET request
-  Future<Map<String, dynamic>> get(String endpoint) async {
-    final token = await _authService.getToken();
-    final response = await http.get(
-      Uri.parse('$baseUrl$endpoint'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-    );
+  const UserModel({
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.role,
+    this.unitId,
+    this.unit,
+    this.profilePhotoUrl,
+  });
 
-    return _handleResponse(response);
-  }
+  bool get isAdmin => role == 'admin';
 
-  // Generic POST request
-  Future<Map<String, dynamic>> post(String endpoint, Map<String, dynamic> data) async {
-    final token = await _authService.getToken();
-    final response = await http.post(
-      Uri.parse('$baseUrl$endpoint'),
-      headers: {
-        'Authorization': token != null ? 'Bearer $token' : '',
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: jsonEncode(data),
-    );
+  factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
+    id:              json['id'],
+    name:            json['name'],
+    email:           json['email'],
+    role:            json['role'],
+    unitId:          json['unit_id'],
+    unit:            json['unit'] != null ? UnitModel.fromJson(json['unit']) : null,
+    profilePhotoUrl: json['profile_photo_url'],
+  );
+}
 
-    return _handleResponse(response);
-  }
+// lib/models/unit_model.dart
+class UnitModel {
+  final int id;
+  final String name;
+  final String? address;
+  final String? googleMapsUrl;
+  final int? usersCount;
+  final double? saldo;
 
-  // Handle API response
-  Map<String, dynamic> _handleResponse(http.Response response) {
-    switch (response.statusCode) {
-      case 200:
-      case 201:
-        return jsonDecode(response.body);
-      case 401:
-        // Token expired or invalid
-        _authService.logout();
-        throw UnauthorizedException('Session expired. Please login again.');
-      case 422:
-        final errors = jsonDecode(response.body);
-        throw ValidationException(errors['errors'] ?? errors['message']);
-      case 429:
-        throw RateLimitException('Too many requests. Please try again later.');
-      case 500:
-        throw ServerException('Server error. Please try again later.');
-      default:
-        throw ApiException('Something went wrong. Status: ${response.statusCode}');
-    }
-  }
+  const UnitModel({
+    required this.id,
+    required this.name,
+    this.address,
+    this.googleMapsUrl,
+    this.usersCount,
+    this.saldo,
+  });
+
+  factory UnitModel.fromJson(Map<String, dynamic> json) => UnitModel(
+    id:            json['id'],
+    name:          json['name'],
+    address:       json['address'],
+    googleMapsUrl: json['google_maps_url'],
+    usersCount:    json['users_count'],
+    saldo:         json['saldo'] != null ? (json['saldo'] as num).toDouble() : null,
+  );
+}
+
+// lib/models/transaction_model.dart
+class TransactionModel {
+  final int id;
+  final String type;
+  final double amount;
+  final String category;
+  final String? description;
+  final String transactionDate;
+  final String? attachmentUrl;
+  final UnitModel? unit;
+  final Map<String, dynamic>? recordedBy;
+  final String? createdAt;
+
+  const TransactionModel({
+    required this.id,
+    required this.type,
+    required this.amount,
+    required this.category,
+    this.description,
+    required this.transactionDate,
+    this.attachmentUrl,
+    this.unit,
+    this.recordedBy,
+    this.createdAt,
+  });
+
+  bool get isPemasukan => type == 'pemasukan';
+
+  factory TransactionModel.fromJson(Map<String, dynamic> json) => TransactionModel(
+    id:              json['id'],
+    type:            json['type'],
+    amount:          (json['amount'] as num).toDouble(),
+    category:        json['category'],
+    description:     json['description'],
+    transactionDate: json['transaction_date'],
+    attachmentUrl:   json['attachment_url'],
+    unit:            json['unit'] != null ? UnitModel.fromJson(json['unit']) : null,
+    recordedBy:      json['recorded_by'],
+    createdAt:       json['created_at'],
+  );
+}
+
+// lib/models/notification_model.dart
+class NotificationModel {
+  final int id;
+  final String title;
+  final String message;
+  final String type;
+  final bool isRead;
+  final String createdAt;
+
+  const NotificationModel({
+    required this.id,
+    required this.title,
+    required this.message,
+    required this.type,
+    required this.isRead,
+    required this.createdAt,
+  });
+
+  factory NotificationModel.fromJson(Map<String, dynamic> json) => NotificationModel(
+    id:        json['id'],
+    title:     json['title'],
+    message:   json['message'],
+    type:      json['type'],
+    isRead:    json['is_read'],
+    createdAt: json['created_at'],
+  );
+}
+
+// lib/models/pagination_model.dart
+class PaginationMeta {
+  final int currentPage;
+  final int lastPage;
+  final int perPage;
+  final int total;
+  final bool hasMore;
+
+  const PaginationMeta({
+    required this.currentPage,
+    required this.lastPage,
+    required this.perPage,
+    required this.total,
+    required this.hasMore,
+  });
+
+  factory PaginationMeta.fromJson(Map<String, dynamic> json) => PaginationMeta(
+    currentPage: json['current_page'],
+    lastPage:    json['last_page'],
+    perPage:     json['per_page'],
+    total:       json['total'],
+    hasMore:     json['has_more'],
+  );
 }
 ```
 
-### 3. Login Implementation
+---
+
+## 3. Exception Classes
 
 ```dart
-class LoginViewModel extends ChangeNotifier {
-  final ApiClient _apiClient = ApiClient();
-  final AuthService _authService = AuthService();
-
-  bool _isLoading = false;
-  String? _error;
-
-  bool get isLoading => _isLoading;
-  String? get error => _error;
-
-  Future<bool> login(String email, String password) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      final response = await _apiClient.post('/login', {
-        'email': email,
-        'password': password,
-      });
-
-      // Save token and user data
-      await _authService.saveToken(response['token']);
-      await _authService.saveUser(response['user']);
-
-      _isLoading = false;
-      notifyListeners();
-      return true;
-
-    } catch (e) {
-      _error = e.toString();
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
-  }
-}
-```
-
-### 4. Dashboard Data Fetching
-
-```dart
-class DashboardViewModel extends ChangeNotifier {
-  final ApiClient _apiClient = ApiClient();
-
-  bool _isLoading = false;
-  Map<String, dynamic>? _dashboardData;
-  String? _error;
-
-  bool get isLoading => _isLoading;
-  Map<String, dynamic>? get dashboardData => _dashboardData;
-  String? get error => _error;
-
-  Future<void> loadDashboard() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      final data = await _apiClient.get('/dashboard');
-      _dashboardData = data;
-    } catch (e) {
-      _error = e.toString();
-      if (e is UnauthorizedException) {
-        // Handle token expiration - redirect to login
-        // Navigation logic here
-      }
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-}
-```
-
-### 5. Transaction Management
-
-```dart
-class TransactionViewModel extends ChangeNotifier {
-  final ApiClient _apiClient = ApiClient();
-
-  List<Map<String, dynamic>> _transactions = [];
-  bool _isLoading = false;
-  bool _hasMorePages = true;
-  int _currentPage = 1;
-  String? _error;
-
-  List<Map<String, dynamic>> get transactions => _transactions;
-  bool get isLoading => _isLoading;
-  bool get hasMorePages => _hasMorePages;
-  String? get error => _error;
-
-  Future<void> loadTransactions({bool refresh = false}) async {
-    if (refresh) {
-      _currentPage = 1;
-      _transactions.clear();
-      _hasMorePages = true;
-    }
-
-    if (!_hasMorePages || _isLoading) return;
-
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      final response = await _apiClient.get('/transactions?page=$_currentPage');
-
-      final newTransactions = List<Map<String, dynamic>>.from(response['data']);
-      _transactions.addAll(newTransactions);
-
-      _currentPage++;
-      _hasMorePages = response['current_page'] < response['last_page'];
-
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<bool> createTransaction({
-    required Map<String, String> data,
-    File? attachment,
-  }) async {
-    try {
-      final token = await _authService.getToken();
-      var request = http.MultipartRequest('POST', Uri.parse('${ApiClient.baseUrl}/transactions'));
-      
-      request.headers.addAll({
-        'Authorization': 'Bearer $token',
-        'Accept': 'application/json',
-      });
-
-      request.fields.addAll(data);
-
-      if (attachment != null) {
-        request.files.add(
-          await http.MultipartFile.fromPath('attachment', attachment.path)
-        );
-      }
-
-      var streamedResponse = await request.send();
-      var response = await http.Response.fromStream(streamedResponse);
-
-      if (response.statusCode == 201) {
-        // Refresh transactions after creating new one
-        await loadTransactions(refresh: true);
-        return true;
-      } else {
-        _error = 'Failed to create transaction: ${response.body}';
-        notifyListeners();
-        return false;
-      }
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-      return false;
-    }
-  }
-}
-```
-
-## Error Handling Classes
-
-```dart
-// Custom Exceptions
+// lib/core/exceptions.dart
 class ApiException implements Exception {
   final String message;
-  ApiException(this.message);
+  final int? statusCode;
+  const ApiException(this.message, {this.statusCode});
 
   @override
   String toString() => message;
 }
 
 class UnauthorizedException extends ApiException {
-  UnauthorizedException(String message) : super(message);
+  const UnauthorizedException() : super('Sesi berakhir. Silakan login kembali.', statusCode: 401);
+}
+
+class ForbiddenException extends ApiException {
+  const ForbiddenException() : super('Anda tidak memiliki izin untuk aksi ini.', statusCode: 403);
+}
+
+class NotFoundException extends ApiException {
+  const NotFoundException() : super('Data tidak ditemukan.', statusCode: 404);
 }
 
 class ValidationException extends ApiException {
   final Map<String, dynamic> errors;
-  ValidationException(this.errors) : super('Validation failed');
+  const ValidationException(this.errors) : super('Validasi gagal.', statusCode: 422);
 
-  @override
-  String toString() {
-    return errors.values.expand((e) => e).join('\n');
+  String get firstError {
+    if (errors.isEmpty) return 'Validasi gagal.';
+    final first = errors.values.first;
+    return first is List ? first.first.toString() : first.toString();
   }
 }
 
 class RateLimitException extends ApiException {
-  RateLimitException(String message) : super(message);
+  const RateLimitException() : super('Terlalu banyak permintaan. Coba lagi nanti.', statusCode: 429);
 }
 
 class ServerException extends ApiException {
-  ServerException(String message) : super(message);
+  const ServerException() : super('Terjadi kesalahan server. Coba lagi nanti.', statusCode: 500);
 }
 ```
 
-## Network Connectivity Handling
+---
+
+## 4. Token Storage (Secure)
 
 ```dart
-class NetworkService {
-  Future<bool> hasInternetConnection() async {
-    try {
-      final result = await InternetAddress.lookup('google.com');
-      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    } on SocketException catch (_) {
-      return false;
-    }
+// lib/core/token_storage.dart
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+class TokenStorage {
+  static const _storage = FlutterSecureStorage();
+  static const _tokenKey = 'fundlink_token';
+  static const _userKey  = 'fundlink_user';
+
+  static Future<void> saveToken(String token) =>
+      _storage.write(key: _tokenKey, value: token);
+
+  static Future<String?> getToken() =>
+      _storage.read(key: _tokenKey);
+
+  static Future<void> saveUser(String userJson) =>
+      _storage.write(key: _userKey, value: userJson);
+
+  static Future<String?> getUser() =>
+      _storage.read(key: _userKey);
+
+  static Future<void> clear() async {
+    await _storage.delete(key: _tokenKey);
+    await _storage.delete(key: _userKey);
   }
 
-  Future<T> executeWithRetry<T>(
-    Future<T> Function() operation,
-    int maxRetries = 3,
-  ) async {
-    int attempts = 0;
+  static Future<bool> hasToken() async {
+    final token = await getToken();
+    return token != null && token.isNotEmpty;
+  }
+}
+```
 
-    while (attempts < maxRetries) {
-      try {
-        return await operation();
-      } catch (e) {
-        attempts++;
+---
 
-        if (attempts >= maxRetries) {
-          rethrow;
-        }
+## 5. HTTP Client
 
-        // Wait before retry (exponential backoff)
-        await Future.delayed(Duration(seconds: attempts * 2));
+```dart
+// lib/core/api_client.dart
+import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'config.dart';
+import 'exceptions.dart';
+import 'token_storage.dart';
+
+class ApiClient {
+  static final ApiClient _instance = ApiClient._internal();
+  factory ApiClient() => _instance;
+  ApiClient._internal();
+
+  Future<Map<String, dynamic>> _headers({bool withAuth = true}) async {
+    final headers = <String, String>{
+      'Accept':       'application/json',
+      'Content-Type': 'application/json',
+    };
+    if (withAuth) {
+      final token = await TokenStorage.getToken();
+      if (token != null) headers['Authorization'] = 'Bearer $token';
+    }
+    return headers;
+  }
+
+  // ─── GET ──────────────────────────────────────────────────────────────────
+
+  Future<Map<String, dynamic>> get(String path, {Map<String, String>? params}) async {
+    var uri = Uri.parse('${AppConfig.baseUrl}$path');
+    if (params != null && params.isNotEmpty) {
+      uri = uri.replace(queryParameters: params);
+    }
+    final response = await http.get(uri, headers: await _headers());
+    return _handle(response);
+  }
+
+  // ─── POST (JSON) ──────────────────────────────────────────────────────────
+
+  Future<Map<String, dynamic>> post(
+    String path,
+    Map<String, dynamic> body, {
+    bool withAuth = true,
+  }) async {
+    final response = await http.post(
+      Uri.parse('${AppConfig.baseUrl}$path'),
+      headers: await _headers(withAuth: withAuth),
+      body: jsonEncode(body),
+    );
+    return _handle(response);
+  }
+
+  // ─── PUT (JSON) ───────────────────────────────────────────────────────────
+
+  Future<Map<String, dynamic>> put(String path, Map<String, dynamic> body) async {
+    final response = await http.put(
+      Uri.parse('${AppConfig.baseUrl}$path'),
+      headers: await _headers(),
+      body: jsonEncode(body),
+    );
+    return _handle(response);
+  }
+
+  // ─── DELETE ───────────────────────────────────────────────────────────────
+
+  Future<Map<String, dynamic>> delete(String path) async {
+    final response = await http.delete(
+      Uri.parse('${AppConfig.baseUrl}$path'),
+      headers: await _headers(),
+    );
+    return _handle(response);
+  }
+
+  // ─── Multipart (file upload) ──────────────────────────────────────────────
+
+  Future<Map<String, dynamic>> multipart(
+    String path,
+    Map<String, String> fields, {
+    Map<String, File>? files,
+    String method = 'POST',
+  }) async {
+    final token = await TokenStorage.getToken();
+    final request = http.MultipartRequest(method, Uri.parse('${AppConfig.baseUrl}$path'));
+
+    request.headers.addAll({
+      'Accept':        'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    });
+
+    request.fields.addAll(fields);
+
+    if (files != null) {
+      for (final entry in files.entries) {
+        request.files.add(await http.MultipartFile.fromPath(entry.key, entry.value.path));
       }
     }
 
-    throw Exception('Max retries exceeded');
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+    return _handle(response);
+  }
+
+  // ─── Response Handler ─────────────────────────────────────────────────────
+
+  Map<String, dynamic> _handle(http.Response response) {
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+
+    switch (response.statusCode) {
+      case 200:
+      case 201:
+        return body;
+      case 401:
+        TokenStorage.clear(); // hapus token expired
+        throw const UnauthorizedException();
+      case 403:
+        throw const ForbiddenException();
+      case 404:
+        throw const NotFoundException();
+      case 422:
+        throw ValidationException(body['errors'] ?? {});
+      case 429:
+        throw const RateLimitException();
+      case 500:
+      default:
+        throw ServerException();
+    }
   }
 }
 ```
 
-## App Initialization
+---
+
+## 6. Services
 
 ```dart
+// lib/services/auth_service.dart
+import 'dart:convert';
+import '../core/api_client.dart';
+import '../core/token_storage.dart';
+import '../models/user_model.dart';
+
+class AuthService {
+  final _client = ApiClient();
+
+  Future<UserModel> login(String email, String password, {String? deviceName}) async {
+    final res = await _client.post('/login', {
+      'email':       email,
+      'password':    password,
+      if (deviceName != null) 'device_name': deviceName,
+    }, withAuth: false);
+
+    await TokenStorage.saveToken(res['data']['token']);
+    final user = UserModel.fromJson(res['data']['user']);
+    await TokenStorage.saveUser(jsonEncode(res['data']['user']));
+    return user;
+  }
+
+  Future<UserModel> register(String name, String email, String password) async {
+    final res = await _client.post('/register', {
+      'name': name, 'email': email, 'password': password,
+    }, withAuth: false);
+
+    await TokenStorage.saveToken(res['data']['token']);
+    final user = UserModel.fromJson(res['data']['user']);
+    await TokenStorage.saveUser(jsonEncode(res['data']['user']));
+    return user;
+  }
+
+  Future<void> logout() async {
+    try {
+      await _client.post('/logout', {});
+    } finally {
+      await TokenStorage.clear();
+    }
+  }
+
+  Future<UserModel?> getCurrentUser() async {
+    final userJson = await TokenStorage.getUser();
+    if (userJson == null) return null;
+    return UserModel.fromJson(jsonDecode(userJson));
+  }
+
+  Future<bool> isLoggedIn() => TokenStorage.hasToken();
+}
+
+// lib/services/transaction_service.dart
+import 'dart:io';
+import '../core/api_client.dart';
+import '../models/transaction_model.dart';
+import '../models/pagination_model.dart';
+
+class TransactionService {
+  final _client = ApiClient();
+
+  Future<({List<TransactionModel> data, PaginationMeta pagination})> getTransactions({
+    int page = 1,
+    int perPage = 15,
+    String? type,
+    String? category,
+    String? search,
+    String? period,
+    int? year,
+    int? month,
+    String? dateFrom,
+    String? dateTo,
+    int? unitId,
+  }) async {
+    final params = <String, String>{
+      'page':     page.toString(),
+      'per_page': perPage.toString(),
+      if (type != null)     'type':      type,
+      if (category != null) 'category':  category,
+      if (search != null)   'search':    search,
+      if (period != null)   'period':    period,
+      if (year != null)     'year':      year.toString(),
+      if (month != null)    'month':     month.toString(),
+      if (dateFrom != null) 'date_from': dateFrom,
+      if (dateTo != null)   'date_to':   dateTo,
+      if (unitId != null)   'unit_id':   unitId.toString(),
+    };
+
+    final res = await _client.get('/transactions', params: params);
+    final d   = res['data'] as Map<String, dynamic>;
+
+    return (
+      data:       (d['data'] as List).map((e) => TransactionModel.fromJson(e)).toList(),
+      pagination: PaginationMeta.fromJson(d['pagination']),
+    );
+  }
+
+  Future<TransactionModel> getTransaction(int id) async {
+    final res = await _client.get('/transactions/$id');
+    return TransactionModel.fromJson(res['data']);
+  }
+
+  Future<TransactionModel> createTransaction({
+    required String type,
+    required double amount,
+    required String category,
+    required String transactionDate,
+    String? description,
+    int? unitId,
+    File? attachment,
+  }) async {
+    final fields = <String, String>{
+      'type':             type,
+      'amount':           amount.toString(),
+      'category':         category,
+      'transaction_date': transactionDate,
+      if (description != null) 'description': description,
+      if (unitId != null)      'unit_id':     unitId.toString(),
+    };
+
+    final res = await _client.multipart(
+      '/transactions',
+      fields,
+      files: attachment != null ? {'attachment': attachment} : null,
+    );
+
+    return TransactionModel.fromJson(res['data']);
+  }
+
+  Future<TransactionModel> updateTransaction(
+    int id, {
+    required String type,
+    required double amount,
+    required String category,
+    required String transactionDate,
+    required int unitId,
+    String? description,
+    File? attachment,
+  }) async {
+    final fields = <String, String>{
+      'type':             type,
+      'amount':           amount.toString(),
+      'category':         category,
+      'transaction_date': transactionDate,
+      'unit_id':          unitId.toString(),
+      if (description != null) 'description': description,
+    };
+
+    final res = await _client.multipart(
+      '/transactions/$id',
+      fields,
+      files: attachment != null ? {'attachment': attachment} : null,
+    );
+
+    return TransactionModel.fromJson(res['data']);
+  }
+
+  Future<void> deleteTransaction(int id) async {
+    await _client.delete('/transactions/$id');
+  }
+}
+
+// lib/services/notification_service.dart
+import '../core/api_client.dart';
+import '../models/notification_model.dart';
+import '../models/pagination_model.dart';
+
+class NotificationService {
+  final _client = ApiClient();
+
+  Future<({List<NotificationModel> data, PaginationMeta pagination, int unreadCount})>
+      getNotifications({int page = 1}) async {
+    final res = await _client.get('/notifications', params: {'page': page.toString()});
+    final d   = res['data'] as Map<String, dynamic>;
+
+    return (
+      data:        (d['data'] as List).map((e) => NotificationModel.fromJson(e)).toList(),
+      pagination:  PaginationMeta.fromJson(d['pagination']),
+      unreadCount: d['unread_count'] as int,
+    );
+  }
+
+  Future<void> markAsRead(int id) => _client.post('/notifications/$id/read', {});
+  Future<void> markAllAsRead()    => _client.post('/notifications/read-all', {});
+}
+```
+
+---
+
+## 7. Contoh Penggunaan di Widget
+
+```dart
+// Contoh: Login Screen
+class LoginScreen extends StatefulWidget {
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _authService = AuthService();
+  final _emailCtrl   = TextEditingController();
+  final _passCtrl    = TextEditingController();
+  bool _loading = false;
+  String? _error;
+
+  Future<void> _login() async {
+    setState(() { _loading = true; _error = null; });
+    try {
+      final user = await _authService.login(_emailCtrl.text, _passCtrl.text);
+      // Navigate to dashboard
+      Navigator.pushReplacementNamed(context, '/dashboard');
+    } on ValidationException catch (e) {
+      setState(() => _error = e.firstError);
+    } on ApiException catch (e) {
+      setState(() => _error = e.message);
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            if (_error != null)
+              Container(
+                padding: const EdgeInsets.all(12),
+                color: Colors.red.shade50,
+                child: Text(_error!, style: const TextStyle(color: Colors.red)),
+              ),
+            TextField(controller: _emailCtrl, decoration: const InputDecoration(labelText: 'Email')),
+            TextField(controller: _passCtrl, obscureText: true, decoration: const InputDecoration(labelText: 'Password')),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loading ? null : _login,
+              child: _loading ? const CircularProgressIndicator() : const Text('Login'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Contoh: Buat Transaksi dengan Foto
+Future<void> createTransactionWithPhoto(BuildContext context) async {
+  final picker  = ImagePicker();
+  final service = TransactionService();
+
+  // Pilih foto
+  final picked = await picker.pickImage(source: ImageSource.gallery);
+  final file   = picked != null ? File(picked.path) : null;
+
+  try {
+    final transaction = await service.createTransaction(
+      type:            'pemasukan',
+      amount:          500000,
+      category:        'Donasi',
+      transactionDate: '2025-05-15',
+      description:     'Donasi bulan Mei',
+      attachment:      file,
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Transaksi #${transaction.id} berhasil disimpan')),
+    );
+  } on ValidationException catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(e.firstError), backgroundColor: Colors.red),
+    );
+  }
+}
+```
+
+---
+
+## 8. App Initialization
+
+```dart
+// lib/main.dart
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize services
-  final authService = AuthService();
-  final apiClient = ApiClient();
+  final isLoggedIn = await AuthService().isLoggedIn();
 
-  // Check if user is already logged in
-  final isAuthenticated = await authService.isAuthenticated();
-
-  runApp(MyApp(
-    isAuthenticated: isAuthenticated,
-    authService: authService,
-    apiClient: apiClient,
+  runApp(MaterialApp(
+    initialRoute: isLoggedIn ? '/dashboard' : '/login',
+    routes: {
+      '/login':     (_) => const LoginScreen(),
+      '/dashboard': (_) => const DashboardScreen(),
+    },
   ));
 }
 ```
 
-## Production Considerations
+---
 
-### 1. Environment Configuration
-```dart
-class Config {
-  static const bool isProduction = bool.fromEnvironment('dart.vm.product');
+## 9. Catatan Penting
 
-  static String get baseUrl {
-    return isProduction
-        ? 'https://bahamud.my.id/api'
-        : 'http://10.0.2.2:8000/api'; // Android emulator
-  }
-}
-```
+### File Upload
+- Selalu gunakan `multipart/form-data` untuk endpoint yang ada file
+- Jangan kirim base64 — kirim file langsung
+- Format yang diterima: `jpg`, `jpeg`, `png`, `webp`, max **2MB**
 
-### 2. SSL Certificate Handling
-```dart
-class HttpOverridesService {
-  static void setup() {
-    HttpOverrides.global = MyHttpOverrides();
-  }
-}
+### Token
+- Simpan token di `FlutterSecureStorage` (bukan SharedPreferences biasa)
+- Jika response `401`, hapus token dan arahkan ke halaman login
+- Sertakan `device_name` saat login untuk manajemen multi-device
 
-class MyHttpOverrides extends HttpOverrides {
-  @override
-  HttpClient createHttpClient(SecurityContext? context) {
-    return super.createHttpClient(context)
-      ..badCertificateCallback = (X509Certificate cert, String host, int port) {
-        // Allow only specific certificates in production
-        return Config.isProduction ? false : true;
-      };
-  }
-}
-```
+### Android Emulator
+- Gunakan `http://10.0.2.2:8000/api` untuk akses localhost dari emulator Android
+- iOS Simulator: `http://127.0.0.1:8000/api`
 
-### 3. Logging and Monitoring
-```dart
-class Logger {
-  static void logApiCall(String endpoint, int statusCode, [String? error]) {
-    if (Config.isProduction) {
-      // Send to monitoring service (Firebase Crashlytics, Sentry, etc.)
-      FirebaseCrashlytics.instance.recordError(
-        error ?? 'API Error',
-        null,
-        information: [endpoint, statusCode.toString()],
-      );
-    } else {
-      print('API Call: $endpoint - Status: $statusCode - Error: $error');
-    }
-  }
-}
-```
+### Role Check
+- Cek `user.role == 'admin'` sebelum tampilkan fitur admin (unit management, user management)
+- API tetap memvalidasi di server — client-side check hanya untuk UX
 
-## Testing Production API
-
-### Unit Tests
-```dart
-void main() {
-  group('API Integration Tests', () {
-    late ApiClient apiClient;
-    late MockClient mockClient;
-
-    setUp(() {
-      mockClient = MockClient();
-      apiClient = ApiClient()..client = mockClient; // Inject mock client
-    });
-
-    test('Login success', () async {
-      when(mockClient.post(any, headers: anyNamed('headers'), body: anyNamed('body')))
-          .thenAnswer((_) async => http.Response(
-                '{"token": "test_token", "user": {"id": 1}}',
-                200,
-              ));
-
-      final result = await apiClient.post('/login', {
-        'email': 'test@example.com',
-        'password': 'password',
-      });
-
-      expect(result['token'], 'test_token');
-    });
-  });
-}
-```
-
-This implementation provides a robust foundation for mobile app integration with proper error handling, token management, and production-ready features.
+### Pagination
+- Gunakan `pagination.has_more` untuk infinite scroll
+- Default `per_page: 15`, maksimum `50`

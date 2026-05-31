@@ -1,13 +1,4 @@
 <div>
-    @if (session()->has('message'))
-        <div class="mb-8 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center space-x-3 text-emerald-600 animate-in fade-in slide-in-from-top-4 duration-300">
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            <span class="text-xs font-black uppercase tracking-wider">{{ session('message') }}</span>
-        </div>
-    @endif
-
     <!-- Header Section -->
     <div class="mb-6">
         <h2 class="text-3xl font-black text-gray-900 tracking-tight">Daftar Pengguna</h2>
@@ -175,8 +166,10 @@
     </div>
 
     @if($selectedUser)
-        <div class="fixed inset-0 z-[60] overflow-hidden pointer-events-none bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
-            <div class="min-h-screen flex items-center justify-center p-4 pointer-events-none">
+        <div class="fixed inset-0 z-[60] overflow-hidden bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
+            <!-- Backdrop: klik untuk tutup -->
+            <div class="absolute inset-0" wire:click="closeDetail"></div>
+            <div class="relative min-h-screen flex items-center justify-center p-4 pointer-events-none">
                 <div class="pointer-events-auto bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl relative border border-gray-100 overflow-hidden max-h-[90vh] overflow-y-auto no-scrollbar">
                     <div class="p-8 text-left">
                         <!-- Header -->
@@ -249,7 +242,26 @@
                                 <span>Edit</span>
                             </button>
                             @if($selectedUser->id !== auth()->id())
-                            <button onclick="confirm('Hapus pengguna ini?') || event.stopImmediatePropagation()" wire:click="delete({{ $selectedUser->id }})" class="flex-1 flex items-center justify-center space-x-2 py-4 bg-rose-50 text-rose-600 rounded-2xl text-xs font-black hover:bg-rose-100 hover:scale-[1.01] active:scale-95 transition-all duration-300 uppercase tracking-[0.2em]">
+                            <button
+                                @click="Swal.fire({
+                                    title: 'Hapus Pengguna?',
+                                    text: 'Akun pengguna ini akan dihapus permanen dari sistem.',
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#2563eb',
+                                    cancelButtonColor: '#e5e7eb',
+                                    confirmButtonText: 'Ya, Hapus',
+                                    cancelButtonText: 'Batal',
+                                    customClass: {
+                                        cancelButton: '!text-gray-700',
+                                        popup: '!rounded-3xl !shadow-2xl',
+                                        title: '!font-black !text-gray-900 !text-xl',
+                                        htmlContainer: '!text-gray-400 !text-sm',
+                                        confirmButton: '!rounded-xl !font-black !text-xs !uppercase !tracking-widest !px-6 !py-3',
+                                        cancelButton: '!rounded-xl !font-black !text-xs !uppercase !tracking-widest !px-6 !py-3',
+                                    }
+                                }).then(r => r.isConfirmed && $wire.delete({{ $selectedUser->id }}))"
+                                class="flex-1 flex items-center justify-center space-x-2 py-4 bg-rose-50 text-rose-600 rounded-2xl text-xs font-black hover:bg-rose-100 hover:scale-[1.01] active:scale-95 transition-all duration-300 uppercase tracking-[0.2em]">
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>

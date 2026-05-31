@@ -246,8 +246,10 @@
 
     @if($selectedTransaction)
         <!-- Balanced Transaction Detail View Design -->
-        <div class="fixed inset-0 z-[60] overflow-hidden pointer-events-none bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
-            <div class="min-h-screen flex items-center justify-center p-4 pointer-events-none">
+        <div class="fixed inset-0 z-[60] overflow-hidden bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
+            <!-- Backdrop: klik untuk tutup -->
+            <div class="absolute inset-0" wire:click="closeDetail"></div>
+            <div class="relative min-h-screen flex items-center justify-center p-4 pointer-events-none">
                 <div class="pointer-events-auto bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl relative border border-gray-100 overflow-hidden max-h-[90vh] overflow-y-auto no-scrollbar">
                     <div class="p-8 text-left">
                         <!-- Header: Icon & Category -->

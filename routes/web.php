@@ -6,7 +6,12 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+// OTP verification routes (auth required, but not yet otp-verified)
+Route::middleware('auth')->group(function () {
+    Route::get('otp/verify', \App\Livewire\OtpVerification::class)->name('otp.verify');
+});
+
+Route::middleware(['auth', 'otp.verified'])->group(function () {
     Route::get('dashboard', \App\Livewire\Dashboard::class)->name('dashboard');
     Route::get('transactions', \App\Livewire\TransactionManager::class)->name('transactions');
     Route::get('notifications', \App\Livewire\NotificationManager::class)->name('notifications');
@@ -23,6 +28,6 @@ Route::get('profile', function () {
         return redirect()->route('dashboard');
     }
     return view('profile');
-})->middleware(['auth'])->name('profile');
+})->middleware(['auth', 'otp.verified'])->name('profile');
 
 require __DIR__.'/auth.php';

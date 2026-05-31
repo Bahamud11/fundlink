@@ -1,479 +1,531 @@
 # Fundlink API Documentation
 
-## Production Usage Guide
+**Version**: 2.0  
+**Base URL Production**: `https://bahamud.my.id/api`  
+**Base URL Development**: `http://127.0.0.1:8000/api`  
+**Auth**: Laravel Sanctum (Bearer Token)
 
-### Base URL
-**Production**: `https://bahamud.my.id/api`
-**Development**: `http://127.0.0.1:8000/api`
+---
 
-### HTTPS Requirement
-All API requests MUST use HTTPS in production. HTTP requests will be rejected.
+## Konvensi Response
 
-### Authentication Flow
+Semua endpoint mengembalikan format JSON yang konsisten:
 
-#### 1. Login
-```http
-POST https://bahamud.my.id/api/login
-Content-Type: application/json
-
+```json
+// Sukses
 {
-  "email": "user@example.com",
-  "password": "password"
+  "success": true,
+  "message": "Pesan sukses",
+  "data": { ... }
+}
+
+// Error
+{
+  "success": false,
+  "message": "Pesan error",
+  "errors": { ... }   // hanya ada jika validasi gagal (422)
 }
 ```
 
-**Success Response (200)**:
+### Pagination Format
+Endpoint yang mengembalikan list menggunakan format:
 ```json
 {
-  "token": "1|abc123def456...",
-  "user": {
-    "id": 1,
-    "name": "John Doe",
-    "email": "user@example.com",
-    "role": "user",
-    "unit_id": 1,
-    "unit": {
-      "id": 1,
-      "name": "Unit A"
+  "success": true,
+  "message": "OK",
+  "data": {
+    "data": [ ... ],
+    "pagination": {
+      "current_page": 1,
+      "last_page": 5,
+      "per_page": 15,
+      "total": 72,
+      "has_more": true
     }
   }
 }
 ```
 
-**Error Response (401)**:
+---
+
+## HTTP Status Codes
+
+| Code | Keterangan |
+|------|-----------|
+| 200  | Sukses |
+| 201  | Data berhasil dibuat |
+| 401  | Token tidak valid / belum login |
+| 403  | Tidak punya izin |
+| 404  | Data tidak ditemukan |
+| 422  | Validasi gagal |
+| 429  | Rate limit (60 req/menit) |
+| 500  | Server error |
+
+---
+
+## Rate Limiting
+
+- **60 request per menit** per user (authenticated)
+- Header response: `X-RateLimit-Limit`, `X-RateLimit-Remaining`
+- Jika melebihi: HTTP 429
+
+---
+
+## 1. Authentication
+
+### POST `/login`
+Login dan dapatkan token.
+
+**Request:**
 ```json
 {
-  "message": "The provided credentials are incorrect."
+  "email": "user@example.com",
+  "password": "password123",
+  "device_name": "iPhone 15 Pro"   // opsional, untuk manajemen token
 }
 ```
 
-#### 2. Using Token for Authenticated Requests
-Include the token in Authorization header for all subsequent requests:
-
-```http
-Authorization: Bearer 1|abc123def456...
-```
-
-#### 3. Logout
-```http
-POST https://bahamud.my.id/api/logout
-Authorization: Bearer {token}
-```
-
-## API Endpoints
-
-### Register
-```http
-POST https://bahamud.my.id/api/register
-Content-Type: application/json
-
-{
-  "name": "Jane Doe",
-  "email": "jane@example.com",
-  "password": "password123"
-}
-```
-
-**Response**:
+**Response 200:**
 ```json
 {
-  "token": "2|xyz...",
-  "user": {
-    "id": 2,
-    "name": "Jane Doe",
-    "email": "jane@example.com",
-    "role": "user",
-    "unit_id": null
+  "success": true,
+  "message": "Login berhasil.",
+  "data": {
+    "token": "1|abc123xyz...",
+    "user": {
+      "id": 1,
+      "name": "Ahmad Bahaudin",
+      "email": "ahmad@example.com",
+      "role": "user",
+      "unit_id": 2,
+      "unit": { "id": 2, "name": "Unit Bogor" },
+      "profile_photo_url": "https://bahamud.my.id/storage/profile-photos/abc.jpg",
+      "email_verified_at": "2025-05-01T10:00:00.000000Z",
+      "created_at": "2025-04-01T08:00:00.000000Z"
+    }
   }
 }
 ```
 
-### Dashboard
-```http
-GET https://bahamud.my.id/api/dashboard
-Authorization: Bearer {token}
-```
-
-**Response**:
+**Response 401:**
 ```json
 {
-  "saldo": 1500000,
-  "total_pemasukan": 2000000,
-  "total_pengeluaran": 500000,
-  "unit": {
+  "success": false,
+  "message": "Email atau password salah."
+}
+```
+
+---
+
+### POST `/register`
+Daftar akun baru.
+
+**Request:**
+```json
+{
+  "name": "Nama Lengkap",
+  "email": "email@example.com",
+  "password": "password123",
+  "device_name": "Flutter App"
+}
+```
+
+**Response 201:** sama seperti login.
+
+---
+
+### POST `/logout` 🔒
+Hapus token saat ini.
+
+**Response 200:**
+```json
+{ "success": true, "message": "Logout berhasil.", "data": null }
+```
+
+---
+
+### POST `/logout-all` 🔒
+Hapus semua token (logout dari semua device).
+
+---
+
+## 2. User
+
+### GET `/user` 🔒
+Ambil data user yang sedang login.
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "OK",
+  "data": {
     "id": 1,
-    "name": "Unit A"
+    "name": "Ahmad Bahaudin",
+    "email": "ahmad@example.com",
+    "role": "user",
+    "unit_id": 2,
+    "unit": { "id": 2, "name": "Unit Bogor" },
+    "profile_photo_url": null,
+    "email_verified_at": "2025-05-01T10:00:00.000000Z",
+    "created_at": "2025-04-01T08:00:00.000000Z"
   }
 }
 ```
 
-### Transactions
-```http
-GET https://bahamud.my.id/api/transactions?page=1
-Authorization: Bearer {token}
-```
+---
 
-**Response**:
+### POST `/user/profile` 🔒
+Update profil. Gunakan `multipart/form-data` jika upload foto.
+
+**Fields:**
+| Field | Type | Required |
+|-------|------|----------|
+| name  | string | ✅ |
+| email | string | ✅ |
+| photo | file (jpg/png/webp, max 2MB) | ❌ |
+
+---
+
+### POST `/user/password` 🔒
+Ganti password.
+
+**Request:**
 ```json
 {
-  "current_page": 1,
+  "current_password": "password_lama",
+  "password": "password_baru",
+  "password_confirmation": "password_baru"
+}
+```
+
+---
+
+## 3. Dashboard
+
+### GET `/dashboard` 🔒
+Ringkasan keuangan. Non-admin hanya melihat data unit sendiri.
+
+**Query Parameters (opsional):**
+| Param | Value | Keterangan |
+|-------|-------|-----------|
+| period | `weekly` \| `monthly` \| `yearly` \| `custom` | Filter periode |
+| year | `2025` | Tahun (untuk monthly/yearly) |
+| month | `5` | Bulan 1-12 (untuk monthly) |
+| date_from | `2025-01-01` | Tanggal mulai (untuk custom) |
+| date_to | `2025-05-31` | Tanggal akhir (untuk custom) |
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "OK",
+  "data": {
+    "saldo": 1500000.00,
+    "total_pemasukan": 2000000.00,
+    "total_pengeluaran": 500000.00,
+    "recent_transactions": [
+      {
+        "id": 10,
+        "type": "pemasukan",
+        "amount": 500000.00,
+        "category": "Donasi",
+        "description": "Donasi bulan Mei",
+        "transaction_date": "2025-05-15",
+        "attachment_url": null,
+        "unit": { "id": 2, "name": "Unit Bogor" },
+        "recorded_by": { "id": 1, "name": "Ahmad" },
+        "created_at": "2025-05-15T09:00:00.000000Z"
+      }
+    ],
+    "unit": { "id": 2, "name": "Unit Bogor" }
+  }
+}
+```
+
+---
+
+## 4. Transactions
+
+### GET `/transactions` 🔒
+Daftar transaksi dengan filter dan pagination.
+
+**Query Parameters:**
+| Param | Value | Keterangan |
+|-------|-------|-----------|
+| page | `1` | Halaman |
+| per_page | `15` (max 50) | Item per halaman |
+| type | `pemasukan` \| `pengeluaran` | Filter tipe |
+| category | `Donasi` | Filter kategori |
+| search | `donasi` | Cari di kategori/keterangan |
+| unit_id | `2` | Filter unit (admin only) |
+| period | `weekly` \| `monthly` \| `yearly` \| `custom` | Filter periode |
+| year | `2025` | Tahun |
+| month | `5` | Bulan |
+| date_from | `2025-01-01` | Tanggal mulai |
+| date_to | `2025-05-31` | Tanggal akhir |
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "OK",
+  "data": {
+    "data": [
+      {
+        "id": 10,
+        "type": "pemasukan",
+        "amount": 500000.00,
+        "category": "Donasi",
+        "description": "Donasi bulan Mei",
+        "transaction_date": "2025-05-15",
+        "attachment_url": "https://bahamud.my.id/storage/attachments/abc.jpg",
+        "unit": { "id": 2, "name": "Unit Bogor" },
+        "recorded_by": { "id": 1, "name": "Ahmad" },
+        "created_at": "2025-05-15T09:00:00.000000Z"
+      }
+    ],
+    "pagination": {
+      "current_page": 1,
+      "last_page": 4,
+      "per_page": 15,
+      "total": 58,
+      "has_more": true
+    }
+  }
+}
+```
+
+---
+
+### GET `/transactions/{id}` 🔒
+Detail satu transaksi.
+
+---
+
+### POST `/transactions` 🔒
+Buat transaksi baru. Gunakan `multipart/form-data` jika ada lampiran.
+
+**Fields:**
+| Field | Type | Required |
+|-------|------|----------|
+| type | `pemasukan` \| `pengeluaran` | ✅ |
+| amount | number (min: 1) | ✅ |
+| category | string (max 100) | ✅ |
+| description | string (max 500) | ❌ |
+| transaction_date | `YYYY-MM-DD` | ✅ |
+| unit_id | integer | ✅ (admin) |
+| attachment | file (jpg/png/webp, max 2MB) | ❌ |
+
+**Response 201:**
+```json
+{
+  "success": true,
+  "message": "Transaksi berhasil disimpan.",
+  "data": { ... }
+}
+```
+
+---
+
+### POST `/transactions/{id}` 🔒 Admin
+Update transaksi. Gunakan `multipart/form-data` jika ganti lampiran.  
+> Menggunakan POST (bukan PUT) karena mendukung file upload.
+
+**Fields:** sama seperti create.
+
+---
+
+### DELETE `/transactions/{id}` 🔒 Admin
+Hapus transaksi beserta lampirannya.
+
+---
+
+## 5. Notifications
+
+### GET `/notifications` 🔒
+Daftar notifikasi user yang login.
+
+**Query Parameters:** `page`, `per_page`
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "OK",
+  "data": {
+    "data": [
+      {
+        "id": 5,
+        "title": "Transaksi Baru",
+        "message": "Transaksi pemasukan sebesar Rp 500.000 ditambahkan oleh Ahmad.",
+        "type": "transaction",
+        "is_read": false,
+        "created_at": "2025-05-15T09:00:00.000000Z"
+      }
+    ],
+    "pagination": { ... },
+    "unread_count": 3
+  }
+}
+```
+
+---
+
+### POST `/notifications/{id}/read` 🔒
+Tandai satu notifikasi sudah dibaca.
+
+---
+
+### POST `/notifications/read-all` 🔒
+Tandai semua notifikasi sudah dibaca.
+
+---
+
+## 6. Units
+
+### GET `/units` 🔒
+Daftar semua unit.
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "OK",
   "data": [
     {
       "id": 1,
-      "type": "pemasukan",
-      "amount": 100000,
-      "category": "Donasi",
-      "description": "Donasi bulan April",
-      "transaction_date": "2024-04-01",
-      "created_at": "2024-04-01T10:00:00Z"
+      "name": "Unit Bogor",
+      "address": "Bogor",
+      "google_maps_url": "https://maps.google.com/...",
+      "users_count": 5,
+      "created_at": "2025-01-01T00:00:00.000000Z"
     }
-  ],
-  "per_page": 15,
-  "total": 50
+  ]
 }
 ```
 
-### Create Transaction
-```http
-POST https://bahamud.my.id/api/transactions
-Authorization: Bearer {token}
-Content-Type: application/json
+---
 
-{
-  "type": "pemasukan",
-  "amount": 50000,
-  "category": "Donasi",
-  "description": "Donasi online",
-  "transaction_date": "2024-04-15"
-}
-```
+### GET `/units/{id}` 🔒
+Detail unit beserta ringkasan keuangan.
 
-**Response**:
+---
+
+### POST `/units` 🔒 Admin
+Tambah unit baru.
+
+**Request (JSON):**
 ```json
 {
-  "message": "Transaction recorded successfully",
-  "transaction": {
-    "id": 2,
-    "type": "pemasukan",
-    "amount": 50000,
-    "category": "Donasi",
-    "description": "Donasi online",
-    "transaction_date": "2024-04-15",
-    "user_id": 1,
-    "unit_id": 1
+  "name": "Unit Jakarta",
+  "address": "Jakarta",
+  "google_maps_url": "https://maps.google.com/...",
+  "initial_balance": 1000000
+}
+```
+
+---
+
+### PUT `/units/{id}` 🔒 Admin
+Update unit.
+
+---
+
+### DELETE `/units/{id}` 🔒 Admin
+Hapus unit.
+
+---
+
+## 7. Users (Admin Only)
+
+### GET `/users` 🔒 Admin
+Daftar pengguna.
+
+**Query Parameters:** `page`, `per_page`, `search`, `role`
+
+---
+
+### POST `/users` 🔒 Admin
+Tambah pengguna baru.
+
+**Request:**
+```json
+{
+  "name": "Nama User",
+  "email": "user@example.com",
+  "password": "password123",
+  "role": "user",
+  "unit_id": 2
+}
+```
+
+---
+
+### PUT `/users/{id}` 🔒 Admin
+Update pengguna. `password` opsional (kosongkan jika tidak ingin ganti).
+
+---
+
+### DELETE `/users/{id}` 🔒 Admin
+Hapus pengguna. Tidak bisa hapus diri sendiri.
+
+---
+
+## 8. Kategori
+
+### GET `/categories`
+Daftar kategori transaksi (tidak perlu login).
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "OK",
+  "data": {
+    "pemasukan": [
+      "Dana BOS", "Donasi", "Infaq", "Zakat",
+      "Iuran Siswa", "Bantuan Pemerintah", "Hibah",
+      "Pendapatan Usaha", "Lainnya"
+    ],
+    "pengeluaran": [
+      "Gaji Pegawai", "Listrik & Air", "Internet", "Pemeliharaan",
+      "Alat Tulis Kantor", "Konsumsi", "Kegiatan Siswa",
+      "Transportasi", "Kebersihan", "Perlengkapan", "Lainnya"
+    ]
   }
 }
 ```
 
-> [!IMPORTANT]
-> **Image Upload in Mobile (Flutter/React Native/Android)**:
-> When uploading images (such as `attachment` for transactions, or `photo` for profile updates), you **MUST** use `multipart/form-data` instead of `application/json`.
-> Do not send base64 encoded strings for file fields. Send the actual file stream.
+---
 
-### User Profile
-```http
-GET https://bahamud.my.id/api/user
-Authorization: Bearer {token}
-```
+## Testing dengan cURL
 
-### Update Profile
-```http
-POST https://bahamud.my.id/api/user/profile
-Authorization: Bearer {token}
-Content-Type: multipart/form-data
-
-name=Jane Doe
-email=jane@example.com
-photo=[FILE_STREAM]
-```
-
-### Units (Admin Only)
-```http
-GET https://bahamud.my.id/api/units
-Authorization: Bearer {token}
-```
-
-### Users (Admin Only)
-```http
-GET https://bahamud.my.id/api/users
-Authorization: Bearer {token}
-```
-
-### Notifications
-```http
-GET https://bahamud.my.id/api/notifications?page=1
-Authorization: Bearer {token}
-```
-
-### Mark Notification as Read
-```http
-POST https://bahamud.my.id/api/notifications/{id}/read
-Authorization: Bearer {token}
-```
-
-## Mobile App Integration Examples
-
-### Flutter/Dart Example
-
-> [!TIP]
-> **Uploading Files with Flutter (MultipartRequest)**
-> To upload images to Fundlink APIs, use `http.MultipartRequest` instead of `http.post`.
-
-```dart
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'dart:io';
-
-class ApiService {
-  final String baseUrl = 'https://bahamud.my.id/api';
-  String? _token;
-
-  Future<Map<String, dynamic>> login(String email, String password) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': email,
-        'password': password,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      _token = data['token'];
-      return data;
-    } else {
-      throw Exception('Login failed');
-    }
-  }
-
-  Future<Map<String, dynamic>> getDashboard() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/dashboard'),
-      headers: {
-        'Authorization': 'Bearer $_token',
-        'Content-Type': 'application/json',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else if (response.statusCode == 401) {
-      // Token expired, redirect to login
-      throw Exception('Unauthorized');
-    } else {
-      throw Exception('Failed to load dashboard');
-    }
-  }
-
-  // Example: Uploading Transaction with Image
-  Future<Map<String, dynamic>> createTransaction({
-    required String type,
-    required String amount,
-    required String category,
-    required String description,
-    required String transactionDate,
-    File? attachment,
-  }) async {
-    var request = http.MultipartRequest('POST', Uri.parse('\$baseUrl/transactions'));
-    
-    // Add Headers
-    request.headers.addAll({
-      'Authorization': 'Bearer \$_token',
-      'Accept': 'application/json',
-    });
-
-    // Add Fields
-    request.fields['type'] = type;
-    request.fields['amount'] = amount;
-    request.fields['category'] = category;
-    request.fields['description'] = description;
-    request.fields['transaction_date'] = transactionDate;
-
-    // Add File
-    if (attachment != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath('attachment', attachment.path)
-      );
-    }
-
-    var streamedResponse = await request.send();
-    var response = await http.Response.fromStream(streamedResponse);
-
-    if (response.statusCode == 201) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to create transaction: \${response.body}');
-    }
-  }
-}
-```
-
-### React Native/JavaScript Example
-```javascript
-const API_BASE_URL = 'https://bahamud.my.id/api';
-
-class ApiService {
-  constructor() {
-    this.token = null;
-  }
-
-  async login(email, password) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        this.token = data.token;
-        return data;
-      } else {
-        throw new Error(data.message || 'Login failed');
-      }
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async getDashboard() {
-    try {
-      const response = await fetch(`${API_BASE_URL}/dashboard`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${this.token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.statusCode === 401) {
-        // Token expired
-        this.token = null;
-        throw new Error('Unauthorized');
-      }
-
-      return await response.json();
-    } catch (error) {
-      throw error;
-    }
-  }
-}
-```
-
-### Android/Kotlin Example
-```kotlin
-class ApiService(private val context: Context) {
-    private val baseUrl = "https://bahamud.my.id/api"
-    private var token: String? = null
-
-    suspend fun login(email: String, password: String, deviceName: String): Result<LoginResponse> {
-        return try {
-            val requestBody = JSONObject().apply {
-                put("email", email)
-                put("password", password)
-            }
-
-            val response = makeRequest("$baseUrl/login", "POST", requestBody.toString())
-            val jsonResponse = JSONObject(response)
-
-            token = jsonResponse.getString("token")
-            Result.success(parseLoginResponse(jsonResponse))
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun getDashboard(): Result<DashboardResponse> {
-        return try {
-            val response = makeRequest("$baseUrl/dashboard", "GET")
-            val jsonResponse = JSONObject(response)
-            Result.success(parseDashboardResponse(jsonResponse))
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    private suspend fun makeRequest(url: String, method: String, body: String? = null): String {
-        return withContext(Dispatchers.IO) {
-            val connection = URL(url).openConnection() as HttpURLConnection
-            connection.requestMethod = method
-            connection.setRequestProperty("Content-Type", "application/json")
-
-            token?.let {
-                connection.setRequestProperty("Authorization", "Bearer $it")
-            }
-
-            body?.let {
-                connection.doOutput = true
-                connection.outputStream.use { os ->
-                    os.write(it.toByteArray())
-                }
-            }
-
-            val responseCode = connection.responseCode
-            if (responseCode == 401) {
-                token = null // Clear expired token
-            }
-
-            connection.inputStream.bufferedReader().use { it.readText() }
-        }
-    }
-}
-```
-
-## Error Handling
-
-### Common HTTP Status Codes
-- **200**: Success
-- **201**: Created (for POST requests)
-- **401**: Unauthorized (invalid/expired token)
-- **422**: Validation error
-- **429**: Too many requests (rate limited)
-- **500**: Server error
-
-### Rate Limiting
-- **Limit**: 60 requests per minute per user
-- **Headers**: Check `X-RateLimit-Remaining` in response
-
-### Token Expiration
-- Tokens are long-lived but can expire
-- Handle 401 responses by redirecting to login
-- Implement token refresh if needed
-
-## Security Best Practices
-
-1. **Always use HTTPS**
-2. **Store tokens securely** (Keychain on iOS, EncryptedSharedPreferences on Android)
-3. **Validate SSL certificates**
-4. **Handle token expiration gracefully**
-5. **Implement proper error handling**
-6. **Use certificate pinning** for additional security
-7. **Validate all input data**
-8. **Log out users on sensitive operations**
-
-## Testing Production API
-
-### Using cURL
 ```bash
 # Login
 curl -X POST https://bahamud.my.id/api/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","password":"password"}'
+  -d '{"email":"admin@example.com","password":"password"}'
 
-# Get dashboard
+# Dashboard
 curl -X GET https://bahamud.my.id/api/dashboard \
-  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+  -H "Authorization: Bearer TOKEN_DISINI"
+
+# Transaksi bulan ini
+curl -X GET "https://bahamud.my.id/api/transactions?period=monthly&year=2025&month=5" \
+  -H "Authorization: Bearer TOKEN_DISINI"
+
+# Buat transaksi dengan lampiran
+curl -X POST https://bahamud.my.id/api/transactions \
+  -H "Authorization: Bearer TOKEN_DISINI" \
+  -F "type=pemasukan" \
+  -F "amount=500000" \
+  -F "category=Donasi" \
+  -F "transaction_date=2025-05-15" \
+  -F "attachment=@/path/to/foto.jpg"
 ```
 
-### Using Postman/Thunder Client
-1. Set base URL to `https://bahamud.my.id/api`
-2. For authenticated requests, add header: `Authorization: Bearer {token}`
-3. Test all endpoints before releasing mobile app
+---
+
+> 🔒 = Membutuhkan `Authorization: Bearer {token}` di header  
+> Admin = Hanya bisa diakses oleh user dengan `role: admin`

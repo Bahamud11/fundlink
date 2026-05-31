@@ -1,13 +1,4 @@
 <div>
-    @if (session()->has('message'))
-        <div class="mb-8 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center space-x-3 text-emerald-600 animate-in fade-in slide-in-from-top-4 duration-300">
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            <span class="text-xs font-black uppercase tracking-wider">{{ session('message') }}</span>
-        </div>
-    @endif
-
     <!-- Header Section -->
     <div class="mb-6">
         <h2 class="text-3xl font-black text-gray-900 tracking-tight">Riwayat Transaksi</h2>
@@ -224,10 +215,15 @@
                         <div class="relative border-b border-gray-100 focus-within:border-blue-600 transition-colors pb-2">
                             <select wire:model="category" class="w-full text-sm font-bold text-gray-900 bg-transparent border-none focus:ring-0 p-0 !appearance-none !bg-none cursor-pointer" style="-webkit-appearance: none; -moz-appearance: none; background-image: none !important;">
                                 <option value="">Pilih kategori transaksi</option>
-                                <option value="Operasional">Operasional</option>
-                                <option value="Dana BOS">Dana BOS</option>
-                                <option value="Donasi">Donasi</option>
-                                <option value="Lainnya">Lainnya</option>
+                                @if($type === 'pemasukan')
+                                    @foreach($kategoriPemasukan as $val => $label)
+                                        <option value="{{ $val }}">{{ $label }}</option>
+                                    @endforeach
+                                @else
+                                    @foreach($kategoriPengeluaran as $val => $label)
+                                        <option value="{{ $val }}">{{ $label }}</option>
+                                    @endforeach
+                                @endif
                             </select>
                             <div class="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">
                                 <svg class="h-4 w-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -322,8 +318,10 @@
 
     @if($selectedTransaction)
         <!-- Balanced Transaction Detail View Design -->
-        <div class="fixed inset-0 z-[60] overflow-hidden pointer-events-none bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
-            <div class="min-h-screen flex items-center justify-center p-4 pointer-events-none">
+        <div class="fixed inset-0 z-[60] overflow-hidden bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
+            <!-- Backdrop: klik untuk tutup -->
+            <div class="absolute inset-0" wire:click="closeDetail"></div>
+            <div class="relative min-h-screen flex items-center justify-center p-4 pointer-events-none">
                 <div class="pointer-events-auto bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl relative border border-gray-100 overflow-hidden max-h-[90vh] overflow-y-auto no-scrollbar">
                     <div class="p-8">
                         <!-- Header: Icon & Category -->
@@ -401,13 +399,194 @@
                         </div>
 
                         <!-- Footer Action -->
-                        <div class="pt-6 border-t border-gray-50">
+                        <div class="pt-6 border-t border-gray-50 flex space-x-3">
+                            @if(auth()->user()->isAdmin())
+                            <button wire:click="editTransaction({{ $selectedTransaction->id }})" class="flex-1 flex items-center justify-center space-x-2 py-4 bg-blue-600 text-white rounded-2xl text-xs font-black shadow-2xl shadow-blue-100 hover:bg-blue-700 hover:scale-[1.01] active:scale-95 transition-all duration-300 uppercase tracking-[0.2em]">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                <span>Edit</span>
+                            </button>
+                            <button
+                                @click="Swal.fire({
+                                    title: 'Hapus Transaksi?',
+                                    text: 'Data transaksi yang dihapus tidak bisa dikembalikan.',
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#2563eb',
+                                    cancelButtonColor: '#e5e7eb',
+                                    confirmButtonText: 'Ya, Hapus',
+                                    cancelButtonText: 'Batal',
+                                    customClass: {
+                                        cancelButton: '!text-gray-700',
+                                        popup: '!rounded-3xl !shadow-2xl',
+                                        title: '!font-black !text-gray-900 !text-xl',
+                                        htmlContainer: '!text-gray-400 !text-sm',
+                                        confirmButton: '!rounded-xl !font-black !text-xs !uppercase !tracking-widest !px-6 !py-3',
+                                        cancelButton: '!rounded-xl !font-black !text-xs !uppercase !tracking-widest !px-6 !py-3',
+                                    }
+                                }).then(r => r.isConfirmed && $wire.deleteTransaction({{ $selectedTransaction->id }}))"
+                                class="flex-1 flex items-center justify-center space-x-2 py-4 bg-rose-50 text-rose-600 rounded-2xl text-xs font-black hover:bg-rose-100 hover:scale-[1.01] active:scale-95 transition-all duration-300 uppercase tracking-[0.2em]">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                <span>Hapus</span>
+                            </button>
+                            @else
                             <button wire:click="closeDetail" class="w-full py-4 bg-blue-600 text-white rounded-2xl text-xs font-black shadow-2xl shadow-blue-100 hover:bg-blue-700 hover:scale-[1.01] active:scale-95 transition-all duration-300 uppercase tracking-[0.2em]">
                                 Kembali ke Daftar
                             </button>
+                            @endif
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    @endif
+
+    @if($isEditing)
+        <!-- Edit Transaction Modal (Admin Only) -->
+        <div class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
+            <div class="bg-white w-full max-w-lg rounded-[2rem] shadow-2xl p-6 max-h-[90vh] overflow-y-auto no-scrollbar relative">
+                <!-- Header -->
+                <div class="mb-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-black text-gray-900 tracking-tight">Edit Transaksi</h2>
+                        <p class="text-gray-400 font-medium mt-0.5 text-xs">Perbarui data transaksi.</p>
+                    </div>
+                    <button type="button" wire:click="resetEditState" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Type Tabs -->
+                <div class="flex mb-6 rounded-2xl bg-gray-50 p-1 h-12">
+                    <button type="button" wire:click="$set('type', 'pemasukan')"
+                        class="flex-1 text-xs font-black transition-all duration-300 rounded-xl {{ $type === 'pemasukan' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'text-gray-400 hover:text-gray-500' }}">
+                        Pemasukan
+                    </button>
+                    <button type="button" wire:click="$set('type', 'pengeluaran')"
+                        class="flex-1 text-xs font-black transition-all duration-300 rounded-xl {{ $type === 'pengeluaran' ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'text-gray-400 hover:text-gray-500' }}">
+                        Pengeluaran
+                    </button>
+                </div>
+
+                <form wire:submit.prevent="update" class="space-y-5">
+                    <!-- Nominal -->
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nominal</label>
+                        <div class="relative border-b border-gray-100 focus-within:border-blue-600 transition-colors pb-2">
+                            <input type="number" wire:model="amount" class="w-full text-xl font-bold text-gray-900 bg-transparent border-none focus:ring-0 p-0 placeholder-gray-300" placeholder="Rp 000.000,00">
+                        </div>
+                        @error('amount') <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider">{{ $message }}</span> @enderror
+                    </div>
+
+                    <!-- Kategori -->
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Kategori</label>
+                        <div class="relative border-b border-gray-100 focus-within:border-blue-600 transition-colors pb-2">
+                            <select wire:model="category" class="w-full text-sm font-bold text-gray-900 bg-transparent border-none focus:ring-0 p-0 !appearance-none !bg-none cursor-pointer" style="-webkit-appearance: none; -moz-appearance: none; background-image: none !important;">
+                                <option value="">Pilih kategori transaksi</option>
+                                @if($type === 'pemasukan')
+                                    @foreach($kategoriPemasukan as $val => $label)
+                                        <option value="{{ $val }}">{{ $label }}</option>
+                                    @endforeach
+                                @else
+                                    @foreach($kategoriPengeluaran as $val => $label)
+                                        <option value="{{ $val }}">{{ $label }}</option>
+                                    @endforeach
+                                @endif
+                            </select>
+                            <div class="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">
+                                <svg class="h-4 w-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </div>
+                        @error('category') <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider">{{ $message }}</span> @enderror
+                    </div>
+
+                    <!-- Cabang -->
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Cabang</label>
+                        <div class="relative border-b border-gray-100 focus-within:border-blue-600 transition-colors pb-2">
+                            <select wire:model="unit_id" class="w-full text-sm font-bold text-gray-900 bg-transparent border-none focus:ring-0 p-0 !appearance-none !bg-none cursor-pointer" style="-webkit-appearance: none; -moz-appearance: none; background-image: none !important;">
+                                <option value="">Pilih Cabang</option>
+                                @foreach($units as $unit)
+                                    <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">
+                                <svg class="h-4 w-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </div>
+                        @error('unit_id') <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider">{{ $message }}</span> @enderror
+                    </div>
+
+                    <!-- Tanggal -->
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tanggal</label>
+                        <div class="border-b border-gray-100 focus-within:border-blue-600 transition-colors pb-2">
+                            <input type="date" wire:model="transaction_date" class="w-full text-sm font-bold text-gray-900 bg-transparent border-none focus:ring-0 p-0">
+                        </div>
+                        @error('transaction_date') <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider">{{ $message }}</span> @enderror
+                    </div>
+
+                    <!-- Keterangan -->
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Keterangan</label>
+                        <div class="border-b border-gray-100 focus-within:border-blue-600 transition-colors pb-2">
+                            <input type="text" wire:model="description" class="w-full text-sm font-bold text-gray-900 bg-transparent border-none focus:ring-0 p-0 placeholder-gray-300" placeholder="Tulis disini...">
+                        </div>
+                    </div>
+
+                    <!-- Ganti Lampiran (opsional) -->
+                    <div class="flex flex-col items-center justify-center pt-2 space-y-2">
+                        <label class="cursor-pointer group flex flex-col items-center space-y-2 relative">
+                            <input type="file" wire:model="attachment" accept="image/*" class="hidden">
+                            <div wire:loading wire:target="attachment" class="absolute inset-0 bg-white/80 flex items-center justify-center rounded-2xl z-10 backdrop-blur-sm">
+                                <svg class="animate-spin h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                            </div>
+                            @if($attachment)
+                                <div class="relative w-24 h-24 rounded-2xl overflow-hidden shadow-lg border-2 border-emerald-100 group-hover:border-emerald-300 transition-all">
+                                    <img src="{{ $attachment->temporaryUrl() }}" class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                        <span class="text-white text-[9px] font-black uppercase tracking-widest">Ganti</span>
+                                    </div>
+                                </div>
+                                <div class="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[8px] font-black uppercase tracking-widest flex items-center space-x-1 mt-1">
+                                    <svg class="h-2.5 w-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    <span>Gambar Baru Siap</span>
+                                </div>
+                            @else
+                                <div class="p-3 rounded-full bg-gray-50 group-hover:bg-blue-50 transition-colors border-2 border-dashed border-gray-200 group-hover:border-blue-200">
+                                    <svg class="h-6 w-6 text-gray-400 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <span class="text-[9px] font-black text-gray-400 group-hover:text-blue-500 uppercase tracking-widest transition-colors">Ganti Bukti (Opsional)</span>
+                            @endif
+                        </label>
+                        @error('attachment') <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider">{{ $message }}</span> @enderror
+                    </div>
+
+                    <!-- Footer Buttons -->
+                    <div class="pt-4 flex space-x-3">
+                        <button type="button" wire:click="resetEditState" class="flex-1 py-3 border border-gray-200 rounded-xl text-xs font-black text-blue-600 hover:bg-gray-50 transition-all">
+                            Batal
+                        </button>
+                        <button type="submit" class="flex-1 py-3 bg-blue-600 text-white rounded-xl text-xs font-black shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all">
+                            Simpan Perubahan
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     @endif
