@@ -10,6 +10,13 @@
     </p>
     <p class="text-blue-600 font-semibold text-sm mb-6 truncate">{{ auth()->user()->email }}</p>
 
+    {{-- Mail error --}}
+    @if ($mailError)
+        <div class="mb-4 p-3 bg-rose-50 border border-rose-100 rounded-xl text-rose-700 text-xs font-bold tracking-wider">
+            ⚠️ Gagal mengirim email ke <span class="font-black">{{ auth()->user()->email }}</span>. Periksa konfigurasi SMTP atau coba kirim ulang.
+        </div>
+    @endif
+
     {{-- Resend message --}}
     @if ($resendMessage)
         <div @class([

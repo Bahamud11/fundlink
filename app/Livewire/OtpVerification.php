@@ -4,20 +4,19 @@ namespace App\Livewire;
 
 use App\Mail\SendOtpMail;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
 
 class OtpVerification extends Component
 {
-    public string $otp          = '';
+    public string  $otp           = '';
     public ?string $resendMessage = null;
-    public int $resendCooldown  = 0;
+    public int     $resendCooldown = 0;
+    public bool    $mailError     = false;  // true jika pengiriman email gagal
 
-    /** Berapa menit OTP berlaku */
-    private const OTP_TTL_MINUTES = 5;
-
-    /** Berapa detik cooldown resend */
+    private const OTP_TTL_MINUTES        = 5;
     private const RESEND_COOLDOWN_SECONDS = 60;
 
     // ─── Cache key helpers ────────────────────────────────────────────────────
@@ -36,14 +35,12 @@ class OtpVerification extends Component
 
     public function mount(): void
     {
-        // Hanya user yang baru daftar (session otp_pending) yang boleh di sini
         if (!session()->has('otp_pending')) {
             $this->redirect(route('dashboard'), navigate: true);
             return;
         }
 
-        // Kirim OTP otomatis saat pertama kali halaman dibuka
-        // (hanya jika belum ada OTP aktif di cache)
+        // Kirim OTP otomatis hanya jika belum ada di cache
         if (!Cache::has($this->otpCacheKey())) {
             $this->sendOtp();
         }
@@ -56,17 +53,27 @@ class OtpVerification extends Component
         $user = auth()->user();
         $code = $this->generateCode();
 
-        // Simpan ke Cache dengan TTL 5 menit
+        // Simpan ke cache dulu — verifikasi tetap bisa berjalan meski email gagal
         Cache::put(
             $this->otpCacheKey(),
             $code,
             now()->addMinutes(self::OTP_TTL_MINUTES)
         );
 
-        // Kirim email menggunakan SendOtpMail
-        Mail::to($user->email)->send(
-            new SendOtpMail($code, $user->name, self::OTP_TTL_MINUTES)
-        );
+        try {
+            Mail::to($user->email)->send(
+                new SendOtpMail($code, $user->name, self::OTP_TTL_MINUTES)
+            );
+            $this->mailError = false;
+        } catch (\Throwable $e) {
+            // Log error untuk debugging, tapi jangan crash halaman
+            Log::error('OTP mail failed', [
+                'user_id' => $user->id,
+                'email'   => $user->email,
+                'error'   => $e->getMessage(),
+            ]);
+            $this->mailError = true;
+        }
     }
 
     // ─── Verify ───────────────────────────────────────────────────────────────
@@ -84,24 +91,18 @@ class OtpVerification extends Component
         $cacheKey = $this->otpCacheKey();
         $stored   = Cache::get($cacheKey);
 
-        // Cache sudah tidak ada → kedaluwarsa
         if ($stored === null) {
             $this->addError('otp', 'Kode OTP sudah kedaluwarsa. Silakan minta kode baru.');
             return;
         }
 
-        // Kode tidak cocok
         if (!hash_equals((string) $stored, $this->otp)) {
             $this->addError('otp', 'Kode OTP tidak valid. Periksa kembali kode yang dikirim.');
             return;
         }
 
-        // ✅ Valid — hapus cache, tandai verified
         Cache::forget($cacheKey);
-
         auth()->user()->update(['email_verified_at' => now()]);
-
-        // Hapus session flag
         session()->forget('otp_pending');
 
         $this->redirect(route('dashboard'), navigate: true);
@@ -114,7 +115,7 @@ class OtpVerification extends Component
         $rateLimitKey = $this->resendRateLimitKey();
 
         if (RateLimiter::tooManyAttempts($rateLimitKey, 1)) {
-            $seconds = RateLimiter::availableIn($rateLimitKey);
+            $seconds              = RateLimiter::availableIn($rateLimitKey);
             $this->resendMessage  = "Tunggu {$seconds} detik sebelum mengirim ulang.";
             $this->resendCooldown = $seconds;
             return;
@@ -122,13 +123,17 @@ class OtpVerification extends Component
 
         RateLimiter::hit($rateLimitKey, self::RESEND_COOLDOWN_SECONDS);
 
-        // Hapus OTP lama, kirim yang baru
         Cache::forget($this->otpCacheKey());
         $this->sendOtp();
+        $this->otp = '';
 
-        $this->otp            = '';
-        $this->resendMessage  = 'Kode OTP baru telah dikirim ke email Anda.';
-        $this->resendCooldown = self::RESEND_COOLDOWN_SECONDS;
+        if ($this->mailError) {
+            $this->resendMessage  = 'Gagal mengirim email. Periksa konfigurasi SMTP.';
+            $this->resendCooldown = 0;
+        } else {
+            $this->resendMessage  = 'Kode OTP baru telah dikirim ke email Anda.';
+            $this->resendCooldown = self::RESEND_COOLDOWN_SECONDS;
+        }
     }
 
     // ─── Logout ───────────────────────────────────────────────────────────────
@@ -148,8 +153,6 @@ class OtpVerification extends Component
     {
         return str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
     }
-
-    // ─── Render ───────────────────────────────────────────────────────────────
 
     public function render()
     {
