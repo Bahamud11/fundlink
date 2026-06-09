@@ -1,26 +1,33 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="text-3xl font-black text-gray-900 tracking-tight">
-            {{ __('Pengaturan Profil') }}
-        </h2>
-        <p class="text-gray-400 font-medium mt-1 text-sm">Kelola informasi akun dan keamanan Anda.</p>
-    </x-slot>
+    <div>
+        <!-- Header -->
+        <div class="w-full flex items-center justify-between mb-5 lg:mb-8 shrink-0">
+            <div class="flex flex-col justify-center">
+                <h2 class="font-['Inter'] font-bold text-2xl sm:text-3xl lg:text-[40px] text-black leading-none tracking-[-0.03em]">Profil Saya</h2>
+                <p class="font-['Inter'] font-light text-base lg:text-[24px] text-[#545454] mt-1 leading-none tracking-[-0.03em]">Kelola informasi akun dan keamanan Anda.</p>
+            </div>
+            <!-- Notification Bell -->
+            <a href="{{ route('notifications') }}" class="relative p-2 text-gray-400 hover:text-blue-600 transition-colors duration-200 shrink-0">
+                @php
+                    $hasUnreadNotif = auth()->user()->notifications()->where('is_read', false)->exists();
+                @endphp
+                <img src="{{ asset($hasUnreadNotif ? 'images/notifred.svg' : 'images/notif.svg') }}" class="h-7 w-7 lg:h-9 lg:w-9 object-contain" alt="Notifikasi">
+            </a>
+        </div>
 
-    <div class="space-y-12 w-full">
-        <div class="p-6 sm:p-10 bg-white rounded-3xl sm:rounded-[2.5rem] border border-gray-100 shadow-sm">
-            <div class="max-w-xl">
+        <div class="w-full space-y-3 lg:space-y-6">
+            <!-- Update Profile Information -->
+            <div class="bg-white rounded-[32px] border border-gray-100 shadow-sm p-5 lg:p-8">
                 <livewire:profile.update-profile-information-form />
             </div>
-        </div>
 
-        <div class="p-6 sm:p-10 bg-white rounded-3xl sm:rounded-[2.5rem] border border-gray-100 shadow-sm">
-            <div class="max-w-xl">
+            <!-- Update Password -->
+            <div class="bg-white rounded-[32px] border border-gray-100 shadow-sm p-5 lg:p-8">
                 <livewire:profile.update-password-form />
             </div>
-        </div>
 
-        <div class="p-6 sm:p-10 bg-rose-50/30 rounded-3xl sm:rounded-[2.5rem] border border-rose-100/50 shadow-sm">
-            <div class="max-w-xl">
+            <!-- Delete Account -->
+            <div class="bg-rose-50/40 rounded-[32px] border border-rose-100/60 shadow-sm p-5 lg:p-8">
                 <livewire:profile.delete-user-form />
             </div>
         </div>

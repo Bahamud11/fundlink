@@ -53,7 +53,7 @@ class Dashboard extends Component
     {
         $this->filterWaktu = match ($value) {
             'Mingguan' => 'Minggu ke-' . min(4, (int) ceil(now()->day / 7)),
-            'Bulanan'  => self::BULAN_LIST[now()->month - 1] . ' ' . now()->year,
+            'Bulanan'  => self::BULAN_LIST[now()->month - 1],
             'Tahunan'  => (string) now()->year,
             default    => $this->filterWaktu,
         };
@@ -117,9 +117,9 @@ class Dashboard extends Component
             $query->whereBetween('transaction_date', [$start, $end]);
 
         } elseif ($this->filterKategori === 'Bulanan') {
-            [$bulanStr, $yearStr] = array_pad(explode(' ', $this->filterWaktu, 2), 2, now()->year);
-            $monthNum = self::BULAN[$bulanStr] ?? now()->month;
-            $query->whereYear('transaction_date', (int) $yearStr)
+            // filterWaktu sekarang hanya nama bulan, e.g. "Januari"
+            $monthNum = self::BULAN[$this->filterWaktu] ?? now()->month;
+            $query->whereYear('transaction_date', now()->year)
                   ->whereMonth('transaction_date', $monthNum);
 
         } elseif ($this->filterKategori === 'Tahunan') {
@@ -163,9 +163,8 @@ class Dashboard extends Component
         }
 
         if ($this->filterKategori === 'Bulanan') {
-            [$bulanStr, $yearStr] = array_pad(explode(' ', $this->filterWaktu, 2), 2, now()->year);
-            $monthNum = self::BULAN[$bulanStr] ?? now()->month;
-            $year     = (int) $yearStr;
+            $monthNum = self::BULAN[$this->filterWaktu] ?? now()->month;
+            $year     = now()->year;
 
             $rows = $query->select(
                     DB::raw('DATE(transaction_date) as date'),

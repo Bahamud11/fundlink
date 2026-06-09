@@ -14,19 +14,29 @@ class UnitSeeder extends Seeder
     {
         $units = [
             [
-                'name' => 'Sekolah Dasar Al-Hikmah',
-                'address' => 'Jl. Raya Pendidikan No. 123, Jakarta',
-                'google_maps_url' => 'https://maps.google.com/?q=SD+Al-Hikmah',
+                'name' => 'SD Al-Hikmah Jakarta',
+                'address' => 'Jakarta',
+                'google_maps_url' => 'https://maps.google.com/?q=SD+Al-Hikmah+Jakarta',
             ],
             [
-                'name' => 'Pesantren Darul Ulum',
-                'address' => 'Kecamatan Cerdas, Bogor',
-                'google_maps_url' => 'https://maps.google.com/?q=Pesantren+Darul+Ulum',
+                'name' => 'SMP Darul Ulum Bogor',
+                'address' => 'Bogor',
+                'google_maps_url' => 'https://maps.google.com/?q=SMP+Darul+Ulum+Bogor',
             ],
             [
-                'name' => 'Panti Asuhan Kasih Ibu',
-                'address' => 'Kelurahan Harapan, Bandung',
-                'google_maps_url' => 'https://maps.google.com/?q=Panti+Asuhan+Kasih+Ibu',
+                'name' => 'SMA Harapan Bangsa Depok',
+                'address' => 'Depok',
+                'google_maps_url' => 'https://maps.google.com/?q=SMA+Harapan+Bangsa+Depok',
+            ],
+            [
+                'name' => 'Panti Asuhan Kasih Ibu Bekasi',
+                'address' => 'Bekasi',
+                'google_maps_url' => 'https://maps.google.com/?q=Panti+Asuhan+Kasih+Ibu+Bekasi',
+            ],
+            [
+                'name' => 'Pesantren Nurul Huda Tangerang',
+                'address' => 'Tangerang',
+                'google_maps_url' => 'https://maps.google.com/?q=Pesantren+Nurul+Huda+Tangerang',
             ],
         ];
 

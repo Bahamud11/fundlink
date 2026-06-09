@@ -280,7 +280,7 @@ class TransactionManager extends Component
     {
         $this->filterFrequency = match ($value) {
             'Mingguan' => 'Minggu ke-' . min(4, (int) ceil(now()->day / 7)),
-            'Bulanan'  => array_keys(self::BULAN)[now()->month - 1] . ' ' . now()->year,
+            'Bulanan'  => array_keys(self::BULAN)[now()->month - 1],
             'Tahunan'  => (string) now()->year,
             default    => $this->filterFrequency,
         };
@@ -310,9 +310,8 @@ class TransactionManager extends Component
             $query->whereBetween('transaction_date', [$start, $end]);
 
         } elseif ($this->filterRange === 'Bulanan') {
-            [$bulanStr, $yearStr] = array_pad(explode(' ', $this->filterFrequency, 2), 2, now()->year);
-            $monthNum = self::BULAN[$bulanStr] ?? now()->month;
-            $query->whereYear('transaction_date', (int) $yearStr)
+            $monthNum = self::BULAN[$this->filterFrequency] ?? now()->month;
+            $query->whereYear('transaction_date', now()->year)
                   ->whereMonth('transaction_date', $monthNum);
 
         } elseif ($this->filterRange === 'Tahunan') {

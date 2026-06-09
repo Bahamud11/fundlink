@@ -15,38 +15,97 @@ class UserSeeder extends Seeder
     {
         // Admin
         User::create([
-            'name' => 'Admin Pusat',
+            'name' => 'Admin Pusat Yayasan',
             'email' => 'admin@fundlink.com',
             'password' => Hash::make('password'),
             'role' => 'admin',
+            'unit_id' => null,
         ]);
 
-        // Unit Users
-        $users = [
+        // 2 Users per Unit (5 units = 10 users)
+        $usersData = [
+            // Unit 1: SD Al-Hikmah Jakarta
             [
-                'name' => 'Budi - SD Al-Hikmah',
+                'name' => 'Budi Santoso',
                 'email' => 'budi@fundlink.com',
                 'password' => Hash::make('password'),
                 'role' => 'user',
                 'unit_id' => 1,
             ],
             [
-                'name' => 'Siti - Pesantren Darul Ulum',
+                'name' => 'Siti Nurhaliza',
                 'email' => 'siti@fundlink.com',
+                'password' => Hash::make('password'),
+                'role' => 'user',
+                'unit_id' => 1,
+            ],
+
+            // Unit 2: SMP Darul Ulum Bogor
+            [
+                'name' => 'Ahmad Fauzi',
+                'email' => 'ahmad@fundlink.com',
                 'password' => Hash::make('password'),
                 'role' => 'user',
                 'unit_id' => 2,
             ],
             [
-                'name' => 'Andi - Panti Asuhan',
-                'email' => 'andi@fundlink.com',
+                'name' => 'Dewi Lestari',
+                'email' => 'dewi@fundlink.com',
+                'password' => Hash::make('password'),
+                'role' => 'user',
+                'unit_id' => 2,
+            ],
+
+            // Unit 3: SMA Harapan Bangsa Depok
+            [
+                'name' => 'Rudi Hermawan',
+                'email' => 'rudi@fundlink.com',
                 'password' => Hash::make('password'),
                 'role' => 'user',
                 'unit_id' => 3,
             ],
+            [
+                'name' => 'Maya Sari',
+                'email' => 'maya@fundlink.com',
+                'password' => Hash::make('password'),
+                'role' => 'user',
+                'unit_id' => 3,
+            ],
+
+            // Unit 4: Panti Asuhan Kasih Ibu Bekasi
+            [
+                'name' => 'Joko Widodo',
+                'email' => 'joko@fundlink.com',
+                'password' => Hash::make('password'),
+                'role' => 'user',
+                'unit_id' => 4,
+            ],
+            [
+                'name' => 'Rina Susanti',
+                'email' => 'rina@fundlink.com',
+                'password' => Hash::make('password'),
+                'role' => 'user',
+                'unit_id' => 4,
+            ],
+
+            // Unit 5: Pesantren Nurul Huda Tangerang
+            [
+                'name' => 'Hasan Basri',
+                'email' => 'hasan@fundlink.com',
+                'password' => Hash::make('password'),
+                'role' => 'user',
+                'unit_id' => 5,
+            ],
+            [
+                'name' => 'Fatimah Zahra',
+                'email' => 'fatimah@fundlink.com',
+                'password' => Hash::make('password'),
+                'role' => 'user',
+                'unit_id' => 5,
+            ],
         ];
 
-        foreach ($users as $user) {
+        foreach ($usersData as $user) {
             User::create($user);
         }
     }
